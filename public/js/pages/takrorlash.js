@@ -4,7 +4,7 @@ import { SAVOLLAR } from "../../content/savollar.js";
 import { store, dueIds, newIds, leitnerUpdate, addXP } from "../store.js";
 import { renderMcq, $, esc, shuffle, confetti } from "../ui.js";
 import { TOPICS, topicById } from "../generators.js";
-import { coveredIds } from "../course.js";
+import { coveredIds, coveredLabel, SEM_NAMES } from "../course.js";
 
 export async function render(el) {
   const open = await coveredIds();
@@ -28,9 +28,9 @@ export async function render(el) {
       <div class="row">
         <button class="btn primary" data-mode="due" ${due.length ? "" : "disabled"}>🔁 Muddati kelganlar (${due.length})</button>
         <button class="btn" data-mode="new" ${fresh.length ? "" : "disabled"}>✨ 10 ta yangi karta</button>
-        <select id="topic-sel"><option value="">Mavzu bo'yicha…</option>${TOPICS.map((t, i) => `<option value="${t.id}" ${open.includes(t.id) ? "" : "disabled"}>${i + 1}. ${esc(t.name)}${open.includes(t.id) ? "" : " 🔒"}</option>`).join("")}</select>
+        <select id="topic-sel"><option value="">Mavzu bo'yicha…</option>${[1, 2].map((s) => `<optgroup label="${SEM_NAMES[s]}">${TOPICS.filter((t) => t.sem === s).map((t) => `<option value="${t.id}" ${open.includes(t.id) ? "" : "disabled"}>${t.no}. ${esc(t.name)}${open.includes(t.id) ? "" : " 🔒"}</option>`).join("")}</optgroup>`).join("")}</select>
       </div>
-      ${open.length < TOPICS.length ? `<p class="small muted mt" style="margin-bottom:0">Faqat o'tilgan mavzular (1–${open.length}) savollari takrorlanadi.</p>` : ""}
+      ${open.length < TOPICS.length ? `<p class="small muted mt" style="margin-bottom:0">${coveredLabel(open.length)} — faqat shu mavzular savollari takrorlanadi.</p>` : ""}
     </div>
     <div id="session"></div>`;
 

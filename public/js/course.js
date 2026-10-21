@@ -40,6 +40,16 @@ export async function setCovered(n) {
 
 export const topicNo = (id) => TOPICS.findIndex((t) => t.id === id) + 1;
 
+export const SEM_NAMES = { 1: "1-semestr. Chiziqli algebra", 2: "2-semestr. Analitik geometriya" };
+
+/** O'tilgan mavzular holati matnda: «1-semestr: 1–7-mavzular» yoki «1-semestr to'liq, 2-semestr: 1–3». */
+export function coveredLabel(n) {
+  if (n >= TOPICS.length) return "Barcha mavzular ochiq";
+  const last = TOPICS[n - 1];
+  if (last.sem === 1) return `O'tilgan: <b>1-semestr, 1–${last.no}-mavzular</b>`;
+  return `O'tilgan: <b>1-semestr to'liq, 2-semestr 1–${last.no}-mavzular</b>`;
+}
+
 /** O'tilgan mavzular id lari. */
 export async function coveredIds() {
   const n = await getCovered();
@@ -57,7 +67,7 @@ export async function coveredIds() {
 export async function topicPicker(box, { key, only = null, max = 0, onChange } = {}) {
   const covered = await getCovered();
   const teacher = looksTeacher();
-  const list = TOPICS.map((t, i) => ({ ...t, no: i + 1, open: i < covered })).filter((t) => !only || only.includes(t.id));
+  const list = TOPICS.map((t, i) => ({ ...t, open: i < covered })).filter((t) => !only || only.includes(t.id));
   let saved = null;
   try { saved = JSON.parse(lsGet("cag-pick-" + key) || "null"); } catch {}
   const allowed = (t) => t.open || teacher;
@@ -67,17 +77,19 @@ export async function topicPicker(box, { key, only = null, max = 0, onChange } =
   const paint = () => {
     box.innerHTML = `
       <div class="row between small" style="gap:6px;flex-wrap:wrap">
-        <span class="muted">${covered < TOPICS.length ? `O'tilgan mavzular: <b>1–${covered}</b>` : "Barcha mavzular ochiq"}${max ? ` · ko'pi bilan ${max} ta` : ""}</span>
+        <span class="muted">${coveredLabel(covered)}${max ? ` · ko'pi bilan ${max} ta` : ""}</span>
         <span class="row" style="gap:6px">
           <button type="button" class="btn sm" data-pick="covered">✓ O'tilganlar</button>
           ${max ? "" : `<button type="button" class="btn sm" data-pick="none">Tozalash</button>`}
         </span>
       </div>
-      <div class="topic-chips mt">${list.map((t) => `
+      ${[1, 2].filter((s) => list.some((t) => t.sem === s)).map((s) => `
+      <div class="small muted mt"><b>${SEM_NAMES[s]}</b></div>
+      <div class="topic-chips mt">${list.filter((t) => t.sem === s).map((t) => `
         <label class="topic-chip ${sel.has(t.id) ? "on" : ""} ${t.open ? "" : "closed"}" title="${t.open ? "" : "Hali o'tilmagan"}">
           <input type="checkbox" value="${t.id}" ${sel.has(t.id) ? "checked" : ""} ${allowed(t) ? "" : "disabled"}>
           <b>${t.no}</b> ${esc(t.name)}${t.open ? "" : " 🔒"}
-        </label>`).join("")}</div>
+        </label>`).join("")}</div>`).join("")}
       ${list.length && !list.some((t) => t.open) ? `<p class="small muted mt">Bu o'yin uchun mos mavzular hali o'tilmagan.</p>` : ""}`;
   };
   const save = () => { lsSet("cag-pick-" + key, JSON.stringify([...sel])); onChange?.([...sel]); };
@@ -100,5 +112,11 @@ export async function topicPicker(box, { key, only = null, max = 0, onChange } =
   return { get: () => list.filter((t) => sel.has(t.id)).map((t) => t.id) };
 }
 
-/** Yorliqlar uchun: «1, 2, 5-mavzular». */
-export const topicsLabel = (ids) => ids.map(topicNo).sort((a, b) => a - b).join(", ") + "-mavzular";
+/** Yorliqlar uchun: «1-sem: 1, 2, 5; 2-sem: 3-mavzular». */
+export function topicsLabel(ids) {
+  const ts = ids.map((id) => TOPICS.find((t) => t.id === id)).filter(Boolean);
+  return [1, 2].map((s) => {
+    const nos = ts.filter((t) => t.sem === s).map((t) => t.no).sort((a, b) => a - b);
+    return nos.length ? `${s}-sem: ${nos.join(", ")}` : "";
+  }).filter(Boolean).join("; ") + "-mavzular";
+}

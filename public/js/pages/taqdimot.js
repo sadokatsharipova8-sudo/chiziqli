@@ -3,7 +3,7 @@
 // #/taqdimot/07/12    — 7-mavzu, 12-slayd
 
 import { $, esc, toast } from "../ui.js";
-import { loadManifest, renderChapter } from "./darslik.js";
+import { loadManifest, renderChapter, mavzuNo } from "./darslik.js";
 import { topicById } from "../generators.js";
 
 const cache = {};
@@ -36,7 +36,7 @@ async function renderList(el, man) {
       ${man.boblar.map((b, i) => [b, i]).filter(([b]) => (b.qism || "") === qism).map(([b, i]) => {
         const t = topicById(b.mavzu);
         return `<a class="tile" href="#/taqdimot/${b.id}" style="border-top:4px solid ${t?.color || "var(--primary)"}">
-          <div class="row between"><span class="pill">${esc(b.id)}-mavzu</span><span class="small muted">🎞 ${counts[i]} slayd</span></div>
+          <div class="row between"><span class="pill">${esc(mavzuNo(b.id))}</span><span class="small muted">🎞 ${counts[i]} slayd</span></div>
           <h3>${esc(b.nomi)}</h3><p>${t ? esc(t.name) : ""}</p></a>`;
       }).join("")}
       </div>`).join("")}`;
@@ -50,7 +50,7 @@ async function renderDeck(el, man, idx, start) {
   el.innerHTML = `
     <div class="deck-top no-print">
       <a class="btn ghost sm" href="#/taqdimot">← Taqdimotlar</a>
-      <b class="deck-title">${esc(bob.id)}. ${esc(bob.nomi)}</b>
+      <b class="deck-title">${esc(bob.qism ? bob.qism.split(".")[0] + ", " : "")}${esc(mavzuNo(bob.id))}. ${esc(bob.nomi)}</b>
       <div class="row">
         <a class="btn sm" href="#/darslik/${bob.id}">📘 Darslik</a>
         <button class="btn sm" id="fs">⛶ To'liq ekran</button>

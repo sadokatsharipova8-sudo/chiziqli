@@ -4,28 +4,48 @@
 
 import { F, Fr, det, inverse, mmul, texMat, texVec, texLin, rrefSteps, minor, toFr } from "./math.js";
 
-// Fan dasturidagi 18 ta mavzu (1–11: chiziqli algebra, 12–18: analitik geometriya).
+// Fan dasturi: 2 semestr × 18 mavzu. sem — semestr, no — semestrdagi tartib raqami.
+const T = (sem, no, id, name, icon, color) => ({ sem, no, id, name, icon, color });
 export const TOPICS = [
-  { id: "kompleks", name: "Kompleks sonlar", icon: "ℂ", color: "#a855f7" },
-  { id: "matritsa", name: "Matritsalar va o'rin almashtirishlar", icon: "▦", color: "#6366f1" },
-  { id: "determinant", name: "Determinantlar va xossalari", icon: "|A|", color: "#8b5cf6" },
-  { id: "minor", name: "Minorlar va algebraik to'ldiruvchilar", icon: "Aᵢⱼ", color: "#7c3aed" },
-  { id: "teskari", name: "Teskari matritsa. Kramer va matritsaviy usul", icon: "A⁻¹", color: "#ec4899" },
-  { id: "rang", name: "Arifmetik fazo, chiziqli bog'liqlik, rang", icon: "r", color: "#db2777" },
-  { id: "sistema", name: "CHTS umumiy yechimi, fundamental sistema", icon: "≡", color: "#f97316" },
-  { id: "fazo", name: "Chiziqli fazo, bazis, qism fazolar", icon: "V", color: "#f59e0b" },
-  { id: "yevklid", name: "Yevklid fazosi, Gram–Shmidt", icon: "⊥", color: "#84cc16" },
-  { id: "kvadratik", name: "Kvadratik formalar", icon: "Q", color: "#10b981" },
-  { id: "xos-qiymat", name: "Chiziqli almashtirishlar, xos sonlar", icon: "λ", color: "#ef4444" },
-  { id: "vektor", name: "Vektorlar va skalyar ko'paytma", icon: "→", color: "#0ea5e9" },
-  { id: "vkopaytma", name: "Vektor va aralash ko'paytma", icon: "×", color: "#06b6d4" },
-  { id: "koordinata", name: "Koordinatalar sistemasi", icon: "⊕", color: "#3b82f6" },
-  { id: "togri-chiziq", name: "Tekislikda to'g'ri chiziq", icon: "╱", color: "#14b8a6" },
-  { id: "tekislik", name: "Fazoda tekislik va to'g'ri chiziq", icon: "◇", color: "#22c55e" },
-  { id: "egri-chiziq", name: "Ikkinchi tartibli chiziqlar", icon: "◯", color: "#eab308" },
-  { id: "sirt", name: "Ikkinchi tartibli sirtlar", icon: "⬭", color: "#64748b" },
-];
-export const topicById = (id) => TOPICS.find((t) => t.id === id);
+  // ===== 1-semestr: chiziqli algebra =====
+  T(1, 1, "kompleks", "Kompleks sonlar. Trigonometrik shakl, Muavr formulasi", "ℂ", "#a855f7"),
+  T(1, 2, "matritsa", "Matritsalar va ular ustida amallar. O'rin almashtirishlar", "▦", "#6366f1"),
+  T(1, 3, "determinant", "n-tartibli determinantlar va ularning xossalari", "|A|", "#8b5cf6"),
+  T(1, 4, "minor", "Algebraik to'ldiruvchi va minorlar", "Aᵢⱼ", "#7c3aed"),
+  T(1, 5, "teskari", "Teskari matritsa. Sistemani matritsaviy usulda yechish", "A⁻¹", "#ec4899"),
+  T(1, 6, "arifmetik", "n-o'lchamli arifmetik fazo. Chiziqli bog'liq va erkli vektorlar", "ℝⁿ", "#db2777"),
+  T(1, 7, "rang", "Chiziqli bog'liqlik haqidagi teoremalar. Matritsa rangi", "r", "#e11d48"),
+  T(1, 8, "sistema", "Sistemani to'la yechish. Fundamental yechimlar", "≡", "#f97316"),
+  T(1, 9, "fazo", "Chiziqli fazo. O'lcham va bazis", "V", "#f59e0b"),
+  T(1, 10, "qism-fazo", "Qism fazo. Qism fazolar yig'indisi va kesishmasi", "⊂", "#eab308"),
+  T(1, 11, "yevklid", "Yevklid fazosi. Ortogonal va ortonormal sistemalar", "⊥", "#84cc16"),
+  T(1, 12, "gram", "Ortogonallashtirish jarayoni. Ortogonal to'ldiruvchi", "G", "#22c55e"),
+  T(1, 13, "formalar", "Chiziqli, bichiziqli va kvadratik formalar", "Q", "#10b981"),
+  T(1, 14, "kanonik", "Kvadratik formaning kanonik shakli", "λx²", "#14b8a6"),
+  T(1, 15, "kyevklid", "Kompleks Yevklid fazo", "ℂⁿ", "#06b6d4"),
+  T(1, 16, "almashtirish", "Chiziqli almashtirishlar va ularning matritsasi", "𝒜", "#0ea5e9"),
+  T(1, 17, "yadro", "Obraz va yadro. Turli bazislardagi matritsalar", "ker", "#3b82f6"),
+  T(1, 18, "xos-qiymat", "Invariant qism fazolar. Xos son va xos vektorlar", "λ", "#ef4444"),
+  // ===== 2-semestr: analitik geometriya =====
+  T(2, 1, "vektor", "Vektorlar va ular ustida chiziqli amallar", "→", "#0284c7"),
+  T(2, 2, "skalyar", "Vektorning o'qqa proyeksiyasi. Skalyar ko'paytma", "·", "#0891b2"),
+  T(2, 3, "vkopaytma", "Vektor ko'paytma va uning xossalari", "×", "#0d9488"),
+  T(2, 4, "aralash", "Aralash ko'paytma va uning xossalari", "abc", "#059669"),
+  T(2, 5, "dekart", "Dekart koordinatalar sistemasini almashtirish", "⊕", "#16a34a"),
+  T(2, 6, "qutb", "Qutb, silindrik va sferik koordinatalar", "ρφ", "#65a30d"),
+  T(2, 7, "togri-chiziq", "Tekislikda to'g'ri chiziq tenglamalari", "╱", "#ca8a04"),
+  T(2, 8, "tekislik", "Fazoda tekislik. O'zaro vaziyat, masofa", "◇", "#d97706"),
+  T(2, 9, "fazo-chiziq", "Fazoda to'g'ri chiziq. Chiziq va tekislik vaziyati", "↗", "#ea580c"),
+  T(2, 10, "ellips", "Ikkinchi tartibli chiziqlar. Ellips", "⬯", "#dc2626"),
+  T(2, 11, "giperbola", "Giperbola va parabola", ")(", "#e11d48"),
+  T(2, 12, "umumiy-chiziq", "Chiziqning umumiy tenglamasi. Markaz", "⊙", "#c026d3"),
+  T(2, 13, "chiziq-kesish", "Ikkinchi tartibli chiziq va to'g'ri chiziq", "⨯", "#9333ea"),
+  T(2, 14, "markaziy", "Kanonik ko'rinishga keltirish: markaziy hol", "◎", "#7c3aed"),
+  T(2, 15, "nomarkaziy", "Kanonik ko'rinishga keltirish: nomarkaziy hol", "∪", "#4f46e5"),
+  T(2, 16, "sirt", "Ikkinchi tartibli sirtlarning kanonik tenglamalari", "⬭", "#2563eb"),
+  T(2, 17, "yasovchi", "Sirtlarning to'g'ri chiziqli yasovchilari", "⫽", "#475569"),
+  T(2, 18, "umumiy-sirt", "Ikkinchi tartibli sirtning umumiy tenglamasi", "∯", "#64748b"),
+];export const topicById = (id) => TOPICS.find((t) => t.id === id);
 
 const M = (m) => texMat(m);
 const num = (v) => ({ type: "num", value: Fr.of(v) });
@@ -232,7 +252,7 @@ export const GENERATORS = [
   },
   // ---------------- Vektorlar ----------------
   {
-    id: "dot", topic: "vektor", title: "Skalyar ko'paytma", quick: true,
+    id: "dot", topic: "skalyar", title: "Skalyar ko'paytma", quick: true,
     gen(rng) {
       const a = [rng.int(-5, 5), rng.int(-5, 5), rng.int(-5, 5)], b = [rng.int(-5, 5), rng.int(-5, 5), rng.int(-5, 5)];
       const v = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -275,7 +295,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "mixed", topic: "vkopaytma", title: "Aralash ko'paytma",
+    id: "mixed", topic: "aralash", title: "Aralash ko'paytma",
     gen(rng) {
       const A = rng.mat(3, 3, -3, 4);
       const v = det(A);
@@ -288,7 +308,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "perp", topic: "vektor", title: "Perpendikulyarlik sharti",
+    id: "perp", topic: "skalyar", title: "Perpendikulyarlik sharti",
     gen(rng) {
       const a = [rng.int(-4, 4), rng.int(-4, 4), rng.nz(-4, 4)];
       const b1 = rng.int(-5, 5), b2 = rng.int(-5, 5);
@@ -395,7 +415,7 @@ export const GENERATORS = [
   },
   // ---------------- Egri chiziqlar ----------------
   {
-    id: "ellipse", topic: "egri-chiziq", title: "Ellips ekssentrisiteti",
+    id: "ellipse", topic: "ellips", title: "Ellips ekssentrisiteti",
     gen(rng) {
       const [p, q, h] = rng.pick(PYTH3);
       const a = h, [b, c] = rng.next() < 0.5 ? [p, q] : [q, p];
@@ -408,7 +428,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "hyperbola", topic: "egri-chiziq", title: "Giperbola fokusi va asimptotasi",
+    id: "hyperbola", topic: "giperbola", title: "Giperbola fokusi va asimptotasi",
     gen(rng) {
       const [p, q, h] = rng.pick(PYTH3);
       const [a, b] = rng.next() < 0.5 ? [p, q] : [q, p];
@@ -421,7 +441,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "circle", topic: "egri-chiziq", title: "Aylana markazi va radiusi",
+    id: "circle", topic: "ellips", title: "Aylana markazi va radiusi",
     gen(rng) {
       const x0 = rng.int(-5, 5), y0 = rng.int(-5, 5), R = rng.int(1, 7);
       const D = -2 * x0, E = -2 * y0, Fc = x0 * x0 + y0 * y0 - R * R;
@@ -434,7 +454,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "parabola", topic: "egri-chiziq", title: "Parabola fokusi", quick: true,
+    id: "parabola", topic: "giperbola", title: "Parabola fokusi", quick: true,
     gen(rng) {
       const p = rng.int(1, 8) * rng.sign();
       const twoP = 2 * p;
@@ -466,7 +486,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "transform", topic: "xos-qiymat", title: "Almashtirish ostidagi nuqta", quick: true,
+    id: "transform", topic: "almashtirish", title: "Almashtirish ostidagi nuqta", quick: true,
     gen(rng) {
       const A = rng.mat(2, 2, -3, 3), v = [rng.int(-4, 4), rng.int(-4, 4)];
       const w = [A[0][0] * v[0] + A[0][1] * v[1], A[1][0] * v[0] + A[1][1] * v[1]];
@@ -564,7 +584,7 @@ export const GENERATORS = [
   },
   // ---------------- Chiziqli bog'liqlik ----------------
   {
-    id: "ldep", topic: "rang", title: "Chiziqli bog'liqlik parametri",
+    id: "ldep", topic: "arifmetik", title: "Chiziqli bog'liqlik parametri",
     gen(rng) {
       let a, b, c1, c2, coef;
       do {
@@ -632,7 +652,7 @@ export const GENERATORS = [
   },
   // ---------------- Yevklid fazosi ----------------
   {
-    id: "gram2", topic: "yevklid", title: "Gram–Shmidt ortogonallashtirish",
+    id: "gram2", topic: "gram", title: "Gram–Shmidt ortogonallashtirish",
     gen(rng) {
       let a1, a2;
       do { a1 = [rng.int(-2, 2), rng.int(-2, 2), rng.int(-2, 2)]; a2 = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]; }
@@ -662,7 +682,7 @@ export const GENERATORS = [
   },
   // ---------------- Kvadratik formalar ----------------
   {
-    id: "qf-canon", topic: "kvadratik", title: "Kvadratik formaning kanonik ko'rinishi",
+    id: "qf-canon", topic: "kanonik", title: "Kvadratik formaning kanonik ko'rinishi",
     gen(rng) {
       const [p, q] = rng.pick([[3, 2], [6, 4], [5, 6], [15, 4], [9, 6], [8, 3], [12, 8]]);
       const h = Math.round(Math.sqrt(p * p + 4 * q * q));
@@ -677,7 +697,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "sylvester", topic: "kvadratik", title: "Silvestr mezoni: bosh minorlar",
+    id: "sylvester", topic: "kanonik", title: "Silvestr mezoni: bosh minorlar",
     gen(rng) {
       const a = rng.int(-3, 5), d = rng.int(-3, 5), f = rng.int(-3, 5), b = rng.int(-2, 2), c = rng.int(-2, 2), e = rng.int(-2, 2);
       const A = [[a, b, c], [b, d, e], [c, e, f]];
@@ -692,7 +712,7 @@ export const GENERATORS = [
   },
   // ---------------- Koordinatalar sistemasi ----------------
   {
-    id: "polar", topic: "koordinata", title: "Qutb radiusi", quick: true,
+    id: "polar", topic: "qutb", title: "Qutb radiusi", quick: true,
     gen(rng) {
       const [p, q, h] = rng.pick(PYTH3);
       const [x, y] = rng.next() < 0.5 ? [p * rng.sign(), q * rng.sign()] : [q * rng.sign(), p * rng.sign()];
@@ -705,7 +725,7 @@ export const GENERATORS = [
     },
   },
   {
-    id: "axes", topic: "koordinata", title: "Koordinatalarni almashtirish",
+    id: "axes", topic: "dekart", title: "Koordinatalarni almashtirish",
     gen(rng) {
       const x0 = rng.int(-4, 4), y0 = rng.int(-4, 4), alpha = rng.pick([90, 180, 270]);
       const [cs, sn] = { 90: [0, 1], 180: [-1, 0], 270: [0, -1] }[alpha];
@@ -739,7 +759,7 @@ export const GENERATORS = [
   },
   // ---------------- Sirtlar ----------------
   {
-    id: "sphere", topic: "sirt", title: "Sfera markazi va radiusi",
+    id: "sphere", topic: "umumiy-sirt", title: "Sfera markazi va radiusi",
     gen(rng) {
       const c = [rng.int(-4, 4), rng.int(-4, 4), rng.int(-4, 4)], R = rng.int(1, 6);
       const D = c.map((x) => -2 * x), G = c[0] ** 2 + c[1] ** 2 + c[2] ** 2 - R * R;
@@ -764,6 +784,275 @@ export const GENERATORS = [
         answer: vec([a, b, c], ["a", "b", "c"]),
         hints: [`Ikkala tomonni $${L * k}$ ga bo'ling: $\\dfrac{x^2}{a^2} + \\dfrac{y^2}{b^2} + \\dfrac{z^2}{c^2} = 1$.`],
         solution: [`$\\dfrac{x^2}{${a * a}} + \\dfrac{y^2}{${b * b}} + \\dfrac{z^2}{${c * c}} = 1$`, `$a = ${a},\\ b = ${b},\\ c = ${c}$`],
+      };
+    },
+  },
+  // ================= Yangi mavzular uchun generatorlar =================
+  {
+    id: "lincomb2", topic: "arifmetik", title: "Vektorni chiziqli kombinatsiya orqali ifodalash",
+    gen(rng) {
+      let a, b;
+      do { a = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]; b = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]; }
+      while (cross3(a, b).every((x) => x === 0) || a[0] * b[1] - a[1] * b[0] === 0);
+      const al = rng.nz(-3, 3), be = rng.nz(-3, 3);
+      const c = a.map((x, i) => al * x + be * b[i]);
+      return {
+        q: `$\\mathbb R^3$ da $\\vec c = ${texVec(c)}$ vektorni $\\vec a = ${texVec(a)}$ va $\\vec b = ${texVec(b)}$ orqali ifodalang: $\\vec c = \\alpha\\vec a + \\beta\\vec b$.`,
+        answer: vec([al, be], ["α", "β"]),
+        hints: ["Komponentalar bo'yicha sistema tuzing: $\\alpha a_k + \\beta b_k = c_k$, $k = 1, 2, 3$.", "Ikki tenglamadan $\\alpha, \\beta$ ni toping, uchinchisi bilan tekshiring."],
+        solution: [
+          `$\\begin{cases} ${texLin([a[0], b[0]], ["\\alpha", "\\beta"])} = ${c[0]} \\\\ ${texLin([a[1], b[1]], ["\\alpha", "\\beta"])} = ${c[1]} \\\\ ${texLin([a[2], b[2]], ["\\alpha", "\\beta"])} = ${c[2]} \\end{cases}$`,
+          `$\\alpha = ${al},\\ \\beta = ${be}$`,
+        ],
+      };
+    },
+  },
+  {
+    id: "subsum", topic: "qism-fazo", title: "Qism fazolar yig'indisi va kesishmasi o'lchami",
+    gen(rng) {
+      const v4 = () => [rng.int(-2, 2), rng.int(-2, 2), rng.int(-2, 2), rng.int(-2, 2)];
+      let a1, a2, b1, b2, r;
+      for (;;) {
+        a1 = v4(); a2 = v4(); b1 = v4();
+        if (rrefSteps([a1, a2, b1]).rank < 3) continue;
+        if (rng.next() < 0.6) {
+          const al = rng.nz(-2, 2), be = rng.int(-2, 2), ga = rng.nz(-1, 1);
+          b2 = a1.map((x, i) => al * x + be * a2[i] + ga * b1[i]);
+        } else b2 = v4();
+        if (rrefSteps([b1, b2]).rank < 2) continue;
+        r = rrefSteps([a1, a2, b1, b2]).rank;
+        if (r >= 3) break;
+      }
+      return {
+        q: `$\\mathbb R^4$ da $L_1 = L(\\vec a_1, \\vec a_2)$, $L_2 = L(\\vec b_1, \\vec b_2)$, bunda $\\vec a_1 = ${texVec(a1)}$, $\\vec a_2 = ${texVec(a2)}$, $\\vec b_1 = ${texVec(b1)}$, $\\vec b_2 = ${texVec(b2)}$. $\\dim(L_1 + L_2)$ va $\\dim(L_1\\cap L_2)$ ni toping.`,
+        answer: vec([r, 4 - r], ["dim(L₁+L₂)", "dim(L₁∩L₂)"]),
+        hints: ["$\\dim(L_1 + L_2)$ — to'rtala vektordan tuzilgan matritsa rangi.", "Grassman formulasi: $\\dim(L_1\\cap L_2) = \\dim L_1 + \\dim L_2 - \\dim(L_1 + L_2)$, bu yerda $\\dim L_1 = \\dim L_2 = 2$."],
+        solution: [`$r${texMat([a1, a2, b1, b2])} = ${r}$`, `$\\dim(L_1 + L_2) = ${r}$, $\\ \\dim(L_1\\cap L_2) = 2 + 2 - ${r} = ${4 - r}$`],
+      };
+    },
+  },
+  {
+    id: "cinner", topic: "kyevklid", title: "Kompleks skalyar ko'paytma",
+    gen(rng) {
+      const z = () => [rng.int(-3, 3), rng.int(-3, 3)];
+      const x = [z(), z()], y = [z(), z()];
+      // (x, y) = x1·conj(y1) + x2·conj(y2)
+      const prod = ([a, b], [c, d]) => [a * c + b * d, b * c - a * d];
+      const p1 = prod(x[0], y[0]), p2 = prod(x[1], y[1]);
+      const re = p1[0] + p2[0], im = p1[1] + p2[1];
+      const cx = (u) => `(${cpx(u[0], u[1])})`;
+      return {
+        q: `$\\mathbb C^2$ da $\\vec x = (${cpx(...x[0])};\\ ${cpx(...x[1])})$, $\\vec y = (${cpx(...y[0])};\\ ${cpx(...y[1])})$. Skalyar ko'paytma $(\\vec x, \\vec y) = x_1\\bar y_1 + x_2\\bar y_2$ ni $a + bi$ ko'rinishda toping.`,
+        answer: vec([re, im], ["Re", "Im"]),
+        hints: ["Ikkinchi ko'paytuvchining **qo'shmasi** olinadi: $\\overline{c + di} = c - di$.", "$(a + bi)(c - di) = (ac + bd) + (bc - ad)i$"],
+        solution: [
+          `$x_1\\bar y_1 = ${cx(x[0])}\\cdot\\overline{${cx(y[0])}} = ${cpx(...p1)}$`,
+          `$x_2\\bar y_2 = ${cx(x[1])}\\cdot\\overline{${cx(y[1])}} = ${cpx(...p2)}$`,
+          `$(\\vec x, \\vec y) = ${cpx(re, im)}$`,
+        ],
+      };
+    },
+  },
+  {
+    id: "compose", topic: "almashtirish", title: "Almashtirishlar ko'paytmasining matritsasi",
+    gen(rng) {
+      const A = rng.mat(2, 2, -3, 3), B = rng.mat(2, 2, -3, 3);
+      return {
+        q: `$\\mathcal A$ va $\\mathcal B$ almashtirishlarning matritsalari $A = ${M(A)}$, $B = ${M(B)}$. Avval $\\mathcal B$, keyin $\\mathcal A$ bajariladigan $\\mathcal A\\mathcal B$ almashtirish matritsasini toping.`,
+        answer: mat(mmul(A, B)),
+        hints: ["$(\\mathcal A\\mathcal B)\\vec x = \\mathcal A(\\mathcal B\\vec x)$ — matritsasi $AB$ (tartib muhim!).", "$c_{ij}$ — $A$ ning $i$-satri va $B$ ning $j$-ustuni skalyar ko'paytmasi."],
+        solution: [`$AB = ${M(A)}${M(B)} = ${M(mmul(A, B))}$`],
+      };
+    },
+  },
+  {
+    id: "defect", topic: "yadro", title: "Almashtirishning rangi va defekti", quick: true,
+    gen(rng) {
+      const r = rng.pick([1, 2, 2]);
+      let rows;
+      do {
+        const u = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)], v = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)];
+        const comb = () => { const a = rng.int(-2, 2), b = r === 2 ? rng.int(-2, 2) : 0; return u.map((x, i) => a * x + b * v[i]); };
+        rows = rng.shuffle([u, r === 2 ? v : comb(), comb()]);
+      } while (rrefSteps(rows).rank !== r);
+      return {
+        q: `$\\mathbb R^3$ dagi $\\mathcal A$ almashtirishning matritsasi $A = ${M(rows)}$. Uning defekti $\\dim\\ker\\mathcal A$ ni toping.`,
+        answer: num(3 - r),
+        hints: ["$\\operatorname{rang}\\mathcal A + \\operatorname{def}\\mathcal A = \\dim V = 3$.", "$\\operatorname{rang}\\mathcal A = r(A)$ — pog'onasimon ko'rinish orqali."],
+        solution: [`$r(A) = ${r}$`, `$\\dim\\ker\\mathcal A = 3 - ${r} = ${3 - r}$`],
+      };
+    },
+  },
+  {
+    id: "qf-value", topic: "formalar", title: "Kvadratik forma qiymati", quick: true,
+    gen(rng) {
+      const a = rng.int(-3, 3), b = rng.int(-2, 2), c = rng.int(-3, 3);
+      const x = rng.nz(-3, 3), y = rng.nz(-3, 3);
+      const v = a * x * x + 2 * b * x * y + c * y * y;
+      return {
+        q: `$Q(x, y) = ${texLin([a, 2 * b, c], ["x^2", "xy", "y^2"])}$ kvadratik formaning $\\vec v = (${x};\\ ${y})$ dagi qiymatini toping.`,
+        answer: num(v),
+        hints: [`$Q = X^TAX$, $A = ${M([[a, b], [b, c]])}$.`],
+        solution: [`$Q(${x}, ${y}) = ${par(a)}\\cdot${par(x)}^2 + ${par(2 * b)}\\cdot${par(x)}\\cdot${par(y)} + ${par(c)}\\cdot${par(y)}^2 = ${v}$`],
+      };
+    },
+  },
+  {
+    id: "bilin", topic: "formalar", title: "Bichiziqli forma qiymati",
+    gen(rng) {
+      const B = rng.mat(2, 2, -3, 3), x = [rng.int(-3, 3), rng.int(-3, 3)], y = [rng.int(-3, 3), rng.int(-3, 3)];
+      const v = x[0] * (B[0][0] * y[0] + B[0][1] * y[1]) + x[1] * (B[1][0] * y[0] + B[1][1] * y[1]);
+      return {
+        q: `Bichiziqli forma $B(\\vec x, \\vec y) = ${texLin([B[0][0], B[0][1], B[1][0], B[1][1]], ["x_1y_1", "x_1y_2", "x_2y_1", "x_2y_2"])}$. $\\vec x = ${texVec(x)}$, $\\vec y = ${texVec(y)}$ uchun $B(\\vec x, \\vec y)$ ni toping.`,
+        answer: num(v),
+        hints: [`$B(\\vec x, \\vec y) = X^TBY$, $B = ${M(B)}$.`],
+        solution: [`$X^TBY = ${texVec(x)}${M(B)}${texMat([[y[0]], [y[1]]])} = ${v}$`],
+      };
+    },
+  },
+  {
+    id: "lincomb3", topic: "vektor", title: "Vektorlarning chiziqli kombinatsiyasi", quick: false,
+    gen(rng) {
+      const a = [rng.int(-4, 4), rng.int(-4, 4), rng.int(-4, 4)], b = [rng.int(-4, 4), rng.int(-4, 4), rng.int(-4, 4)];
+      const k1 = rng.pick([2, 3, -2, -1, 1]), k2 = rng.pick([1, -1, 3, -3, 2, -2]);
+      const c = a.map((x, i) => k1 * x + k2 * b[i]);
+      return {
+        q: `$\\vec a = ${texVec(a)}$, $\\vec b = ${texVec(b)}$. $\\vec c = ${texLin([k1, k2], ["\\vec a", "\\vec b"])}$ vektorni toping.`,
+        answer: vec(c, ["x", "y", "z"]),
+        hints: ["Chiziqli amallar koordinatalar bo'yicha bajariladi."],
+        solution: [`$\\vec c = (${a.map((x, i) => `${k1}\\cdot${par(x)} + ${par(k2)}\\cdot${par(b[i])}`).join(";\\ ")}) = ${texVec(c)}$`],
+      };
+    },
+  },
+  {
+    id: "lineplane", topic: "fazo-chiziq", title: "To'g'ri chiziq va tekislik kesishish nuqtasi",
+    gen(rng) {
+      let s, n;
+      do { s = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]; n = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]; } while (dot3(s, n) === 0 || s.every((x) => !x));
+      const P = [rng.int(-4, 4), rng.int(-4, 4), rng.int(-4, 4)], t0 = rng.nz(-2, 2);
+      const M0 = P.map((x, i) => x - t0 * s[i]), D = -dot3(n, P);
+      const can = ["x", "y", "z"].map((v, i) => `\\frac{${v} ${M0[i] > 0 ? "-" : "+"} ${Math.abs(M0[i])}}{${s[i]}}`.replace(/ [+-] 0\}/, "}")).join(" = ");
+      return {
+        q: `$${can}$ to'g'ri chiziq va $${texLin(n, ["x", "y", "z"], D)} = 0$ tekislikning kesishish nuqtasini toping.`,
+        answer: vec(P, ["x", "y", "z"]),
+        hints: ["To'g'ri chiziqni parametrik ko'rinishga o'tkazing: $x = x_0 + lt$, $y = y_0 + mt$, $z = z_0 + nt$.", "Tekislik tenglamasiga qo'yib, $t$ ni toping."],
+        solution: [`$x = ${M0[0]} + ${par(s[0])}t,\\ y = ${M0[1]} + ${par(s[1])}t,\\ z = ${M0[2]} + ${par(s[2])}t$`, `Tekislikka qo'ysak: $t = ${t0}$`, `Nuqta: $${texVec(P)}$`],
+      };
+    },
+  },
+  {
+    id: "center2", topic: "umumiy-chiziq", title: "Ikkinchi tartibli chiziq markazi",
+    gen(rng) {
+      let a, b, c;
+      do { a = rng.int(-4, 5); b = rng.int(-3, 3); c = rng.int(-4, 5); } while (a * c - b * b === 0 || !a || !c);
+      const x0 = rng.int(-3, 3), y0 = rng.int(-3, 3);
+      const d = -(a * x0 + b * y0), e = -(b * x0 + c * y0), f = rng.int(-9, 9);
+      return {
+        q: `$${texLin([a, 2 * b, c, 2 * d, 2 * e], ["x^2", "xy", "y^2", "x", "y"], f)} = 0$ chiziqning markazini toping.`,
+        answer: vec([x0, y0], ["x₀", "y₀"]),
+        hints: ["Markaz sistemasi: $\\begin{cases} a_{11}x + a_{12}y + a_{13} = 0 \\\\ a_{12}x + a_{22}y + a_{23} = 0\\end{cases}$ ($xy$, $x$, $y$ oldidagi koeffitsiyentlarning yarmi olinadi).", `$\\delta = ${a * c - b * b} \\ne 0$ — chiziq markaziy.`],
+        solution: [`$\\begin{cases} ${texLin([a, b], ["x", "y"], d)} = 0 \\\\ ${texLin([b, c], ["x", "y"], e)} = 0\\end{cases}$`, `$x_0 = ${x0},\\ y_0 = ${y0}$`],
+      };
+    },
+  },
+  {
+    id: "delta", topic: "umumiy-chiziq", title: "δ invariant va chiziq turi", quick: true,
+    gen(rng) {
+      const a = rng.int(-4, 5), b = rng.int(-3, 3), c = rng.int(-4, 5);
+      const v = a * c - b * b;
+      return {
+        q: `$${texLin([a, 2 * b, c, rng.int(-6, 6), rng.int(-6, 6)], ["x^2", "xy", "y^2", "x", "y"], rng.int(-9, 9))} = 0$ chiziq uchun $\\delta = \\begin{vmatrix} a_{11} & a_{12} \\\\ a_{12} & a_{22}\\end{vmatrix}$ ni hisoblang.`,
+        answer: num(v),
+        hints: ["$a_{12}$ — $xy$ oldidagi koeffitsiyentning yarmi.", "$\\delta > 0$ — elliptik, $\\delta < 0$ — giperbolik, $\\delta = 0$ — parabolik (nomarkaziy) tur."],
+        solution: [`$\\delta = ${par(a)}\\cdot${par(c)} - ${par(b)}^2 = ${v}$ — ${v > 0 ? "elliptik" : v < 0 ? "giperbolik" : "parabolik"} tur.`],
+      };
+    },
+  },
+  {
+    id: "lineconic", topic: "chiziq-kesish", title: "To'g'ri chiziq va aylananing kesishish nuqtalari",
+    gen(rng) {
+      const R = rng.pick([5, 10, 13]);
+      const base = { 5: [[3, 4], [4, 3], [5, 0], [0, 5]], 10: [[6, 8], [8, 6], [10, 0], [0, 10]], 13: [[5, 12], [12, 5], [13, 0], [0, 13]] }[R];
+      const pts = base.flatMap(([x, y]) => [[x, y], [-x, y], [x, -y], [-x, -y]]).filter((p, i, arr) => arr.findIndex((q) => q[0] === p[0] && q[1] === p[1]) === i);
+      let p1, p2;
+      do { [p1, p2] = rng.shuffle(pts).slice(0, 2); } while (p1[0] === p2[0] && p1[1] === p2[1]);
+      if (p1[0] > p2[0] || (p1[0] === p2[0] && p1[1] > p2[1])) [p1, p2] = [p2, p1];
+      let A = p2[1] - p1[1], B = -(p2[0] - p1[0]), C = -(A * p1[0] + B * p1[1]);
+      const g = [A, B, C].reduce((s, x) => { let a = Math.abs(s), b = Math.abs(x); while (b) [a, b] = [b, a % b]; return a; }, 0) || 1;
+      A /= g; B /= g; C /= g;
+      if (A < 0 || (A === 0 && B < 0)) { A = -A; B = -B; C = -C; }
+      return {
+        q: `$x^2 + y^2 = ${R * R}$ aylana va $${texLin([A, B], ["x", "y"], C)} = 0$ to'g'ri chiziqning kesishish nuqtalarini toping ($x_1 \\le x_2$; teng bo'lsa $y_1 < y_2$).`,
+        answer: vec([...p1, ...p2], ["x₁", "y₁", "x₂", "y₂"]),
+        hints: ["To'g'ri chiziqdan bir o'zgaruvchini ifodalab, aylana tenglamasiga qo'ying.", "Hosil bo'lgan kvadrat tenglama diskriminanti: $D > 0$ — 2 nuqta, $D = 0$ — urinadi, $D < 0$ — kesishmaydi."],
+        solution: [`Kvadrat tenglamani yechib: $(${p1.join(";\\ ")})$ va $(${p2.join(";\\ ")})$`, `Tekshirish: $${p1[0] * p1[0]} + ${p1[1] * p1[1]} = ${R * R}$ ✓`],
+      };
+    },
+  },
+  {
+    id: "central-canon", topic: "markaziy", title: "Markaziy chiziqni kanonik ko'rinishga keltirish",
+    gen(rng) {
+      const [p, q] = rng.pick([[3, 2], [6, 4], [5, 6], [15, 4], [9, 6], [8, 3]]);
+      const h = Math.round(Math.sqrt(p * p + 4 * q * q));
+      const c = rng.int(-3, 3), a = c + p, b = q * rng.sign();
+      const l1 = (a + c - h) / 2, l2 = (a + c + h) / 2;
+      const x0 = rng.int(-2, 2), y0 = rng.int(-2, 2), cc = rng.nz(-12, 12);
+      const d = -(a * x0 + b * y0), e = -(b * x0 + c * y0), f = cc - (d * x0 + e * y0);
+      return {
+        q: `$${texLin([a, 2 * b, c, 2 * d, 2 * e], ["x^2", "xy", "y^2", "x", "y"], f)} = 0$ chiziqni kanonik ko'rinishga keltiring: $\\lambda_1x'^2 + \\lambda_2y'^2 + c' = 0$ ($\\lambda_1 < \\lambda_2$). $\\lambda_1, \\lambda_2, c'$ ni toping.`,
+        answer: vec([l1, l2, cc], ["λ₁", "λ₂", "c'"]),
+        hints: ["1) Markazni toping (markaz sistemasi). 2) Ko'chirishdan keyin ozod had: $c' = a_{13}x_0 + a_{23}y_0 + a_{33}$.", `3) Burish: $\\lambda_{1,2}$ — $${M([[a, b], [b, c]])}$ ning xos sonlari.`],
+        solution: [`Markaz: $(${x0};\\ ${y0})$, $\\ c' = ${par(d)}\\cdot${par(x0)} + ${par(e)}\\cdot${par(y0)} + ${par(f)} = ${cc}$`, `$\\lambda^2 - ${par(a + c)}\\lambda + ${par(a * c - b * b)} = 0 \\Rightarrow \\lambda_1 = ${l1},\\ \\lambda_2 = ${l2}$`, `Kanonik: $${texLin([l1, l2], ["x'^2", "y'^2"], cc)} = 0$`],
+      };
+    },
+  },
+  {
+    id: "parab-vertex", topic: "nomarkaziy", title: "Parabolaning uchi va parametri",
+    gen(rng) {
+      const x0 = rng.int(-4, 4), y0 = rng.int(-4, 4), p = rng.nz(-4, 4);
+      return {
+        q: `$${texLin([1, -2 * y0, -2 * p], ["y^2", "y", "x"], y0 * y0 + 2 * p * x0)} = 0$ parabolani $(y - y_0)^2 = 2p(x - x_0)$ ko'rinishga keltiring. $x_0, y_0, p$ ni toping.`,
+        answer: vec([x0, y0, p], ["x₀", "y₀", "p"]),
+        hints: ["$y$ bo'yicha to'liq kvadrat ajrating, qolganini o'ng tomonga o'tkazing.", "$\\delta = 0$ — chiziq nomarkaziy (parabolik tur)."],
+        solution: [`$(y ${y0 > 0 ? "-" : "+"} ${Math.abs(y0)})^2 = ${2 * p}x ${-2 * p * x0 >= 0 ? "+" : "-"} ${Math.abs(2 * p * x0)} = ${2 * p}(x ${x0 > 0 ? "-" : "+"} ${Math.abs(x0)})$`.replace(/[+-] 0\)/g, ")").replace(/ [+-] 0 =/, " ="), `Uchi $(${x0};\\ ${y0})$, $p = ${p}$`],
+      };
+    },
+  },
+  {
+    id: "hyp-axes", topic: "sirt", title: "Bir pallali giperboloid yarim o'qlari",
+    gen(rng) {
+      const [a, b, c] = rng.shuffle([1, 2, 3, 4, 5, 6]).slice(0, 3);
+      const L = a * a * b * b * c * c;
+      return {
+        q: `$${texLin([L / (a * a), L / (b * b), -L / (c * c)], ["x^2", "y^2", "z^2"])} = ${L}$ sirtining turi va yarim o'qlari $a, b, c$ ni toping.`,
+        answer: vec([a, b, c], ["a", "b", "c"]),
+        hints: [`Ikkala tomonni $${L}$ ga bo'ling.`, "Bitta minus ishora va o'ng tomon $1$ — bir pallali giperboloid."],
+        solution: [`$\\dfrac{x^2}{${a * a}} + \\dfrac{y^2}{${b * b}} - \\dfrac{z^2}{${c * c}} = 1$ — bir pallali giperboloid`, `$a = ${a},\\ b = ${b},\\ c = ${c}$`],
+      };
+    },
+  },
+  {
+    id: "gen-line", topic: "yasovchi", title: "Giperboloidning to'g'ri chiziqli yasovchisi",
+    gen(rng) {
+      const [a, b, c] = rng.shuffle([1, 2, 3, 4, 5]).slice(0, 3);
+      return {
+        q: `$\\dfrac{x^2}{${a * a}} + \\dfrac{y^2}{${b * b}} - \\dfrac{z^2}{${c * c}} = 1$ giperboloidning $M(${a};\\ 0;\\ 0)$ nuqtasidan o'tuvchi to'g'ri chiziqli yasovchisining yo'naltiruvchi vektorini toping ($y$-komponentasi $${b}$, $z$-komponentasi musbat).`,
+        answer: vec([0, b, c], ["l", "m", "n"]),
+        hints: ["Yasovchi: $x = " + a + " + lt$, $y = mt$, $z = nt$. Tenglamaga qo'yib, $t$ ning har bir darajasi oldidagi koeffitsiyentni nolga tenglang.", "$t$ oldidagi had: $\\frac{2l}{" + a + "} = 0 \\Rightarrow l = 0$; $t^2$: $\\frac{m^2}{" + b * b + "} - \\frac{n^2}{" + c * c + "} = 0$."],
+        solution: [`$l = 0$, $\\dfrac{m^2}{${b * b}} = \\dfrac{n^2}{${c * c}}$, $m = ${b} \\Rightarrow n = ${c}$`, `$\\vec s = (0;\\ ${b};\\ ${c})$ (ikkinchi yasovchi: $(0;\\ ${b};\\ -${c})$)`],
+      };
+    },
+  },
+  {
+    id: "quadric-center", topic: "umumiy-sirt", title: "Ikkinchi tartibli sirt markazi",
+    gen(rng) {
+      const k = [rng.nz(-4, 4), rng.nz(-4, 4), rng.nz(-4, 4)], c = [rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)];
+      const lin = k.map((x, i) => -2 * x * c[i]), G = k.reduce((s, x, i) => s + x * c[i] * c[i], 0) - rng.int(-9, 9);
+      return {
+        q: `$${texLin([...k, ...lin], ["x^2", "y^2", "z^2", "x", "y", "z"], G)} = 0$ sirtning markazini toping.`,
+        answer: vec(c, ["x₀", "y₀", "z₀"]),
+        hints: ["Har bir o'zgaruvchi bo'yicha to'liq kvadrat ajrating: $ax^2 + 2bx = a\\left(x + \\frac ba\\right)^2 - \\frac{b^2}{a}$.", "Markaz — $\\partial F/\\partial x = \\partial F/\\partial y = \\partial F/\\partial z = 0$ nuqta."],
+        solution: [`$${k.map((x, i) => `${i ? (x < 0 ? " - " : " + ") : x < 0 ? "-" : ""}${Math.abs(x) === 1 ? "" : Math.abs(x)}(${"xyz"[i]} ${c[i] > 0 ? "-" : "+"} ${Math.abs(c[i])})^2`).join("")} = \\text{const}$`.replace(/ [+-] 0\)/g, ")"), `Markaz $${texVec(c)}$`],
       };
     },
   },

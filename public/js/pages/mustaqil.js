@@ -58,8 +58,9 @@ function renderList(el) {
     <div class="page-head"><h1>📝 Mustaqil ish</h1>
       <p>Har bir talaba <b>o'z shaxsiy variant</b>ini oladi: masalalar bir xil turda, ammo sonlar har xil — ko'chirib bo'lmaydi. Topshirgach natija va <b>tasdiqlash kodi</b> chiqadi; uni o'qituvchiga yuborasiz.</p></div>
     ${profileForm(s)}
+    ${[1, 2].map((sem) => `<h2 class="mt">${sem}-semestr. ${sem === 1 ? "Chiziqli algebra" : "Analitik geometriya"}</h2>
     <div class="grid g2">
-      ${MUSTAQIL.map((w) => {
+      ${MUSTAQIL.filter((w) => (w.sem || 1) === sem).map((w) => {
         const r = results[w.id];
         const late = w.muddat && w.muddat < new Date().toISOString().slice(0, 10);
         return `<div class="card">
@@ -70,7 +71,7 @@ function renderList(el) {
           <a class="btn ${r ? "" : "primary"}" href="#/mustaqil/${encodeURIComponent(w.id)}">${r ? "Ko'rish / qayta" : "Boshlash →"}</a>
         </div>`;
       }).join("")}
-    </div>`;
+    </div>`).join("")}`;
   $("#pf-save", el)?.addEventListener("click", () => {
     const st = store.get();
     st.profile.name = $("#pf-name", el).value.trim();

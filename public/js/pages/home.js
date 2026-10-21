@@ -56,7 +56,7 @@ export function render(el) {
           ${TOPICS.map((t) => {
             const v = s.mastery[t.id] || 0, m = masteryLabel(v);
             return `<a class="mastery-row" href="#/mashq/${t.id}" style="color:inherit;text-decoration:none">
-              <span>${esc(t.name)}</span><span class="m-label ${m.cls}">${m.name}</span>
+              <span><span class="muted small">${t.sem}.${t.no}</span> ${esc(t.name)}</span><span class="m-label ${m.cls}">${m.name}</span>
               <div class="progress" style="grid-column:1/-1"><i style="width:${v}%;background:${t.color}"></i></div></a>`;
           }).join("")}
         </div>

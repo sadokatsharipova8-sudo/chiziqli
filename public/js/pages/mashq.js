@@ -22,16 +22,17 @@ function renderList(el) {
       <span class="ico" style="background:var(--primary-soft)">🔀</span>
       <div><h3>Aralash mashq (interleaving)</h3><p>Mavzular aralashib keladi — tadqiqotlar bu usul uzoq muddatli bilimni sezilarli oshirishini ko'rsatgan. Kuchsiz mavzular ko'proq tushadi.</p></div>
     </a>
+    ${[1, 2].map((sem) => `<h2 class="mt">${sem}-semestr. ${sem === 1 ? "Chiziqli algebra" : "Analitik geometriya"}</h2>
     <div class="grid g3">
-      ${TOPICS.map((t) => {
+      ${TOPICS.filter((t) => t.sem === sem).map((t) => {
         const v = s.mastery[t.id] || 0, m = masteryLabel(v), a = s.attempts[t.id];
         return `<a class="card tile topic-card" style="--c:${t.color}" href="#/mashq/${t.id}">
           <div class="row between"><span class="t-ico">${t.icon}</span><span class="m-label ${m.cls}">${m.name}</span></div>
-          <h3>${esc(t.name)}</h3>
+          <h3><span class="muted">${t.no}.</span> ${esc(t.name)}</h3>
           <div class="progress"><i style="width:${v}%;background:${t.color}"></i></div>
           <p class="small">${generatorsFor(t.id).length} xil masala${a ? ` · ${a.ok}/${a.total} to'g'ri` : ""}</p></a>`;
       }).join("")}
-    </div>`;
+    </div>`).join("")}`;
 }
 
 function pickMixed() {

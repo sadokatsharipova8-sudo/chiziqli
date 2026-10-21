@@ -143,7 +143,7 @@ export const BADGES = [
   { id: "master1", icon: "🎯", name: "Birinchi ustozlik", desc: "Bitta mavzuda «Ustoz» darajasi", test: (s) => Object.values(s.mastery).some((v) => v >= 90) },
   { id: "master5", icon: "🏆", name: "Ko'p qirrali", desc: "5 ta mavzuda «Ustoz»", test: (s) => Object.values(s.mastery).filter((v) => v >= 90).length >= 5 },
   { id: "det", icon: "🧮", name: "Determinant ustasi", desc: "Determinantlar — Ustoz", test: (s) => (s.mastery.determinant || 0) >= 90 },
-  { id: "geo", icon: "📐", name: "Geometr", desc: "Egri chiziqlar — Ustoz", test: (s) => (s.mastery["egri-chiziq"] || 0) >= 90 },
+  { id: "geo", icon: "📐", name: "Geometr", desc: "Ellips va giperbola — Ustoz", test: (s) => (s.mastery["ellips"] || 0) >= 90 && (s.mastery["giperbola"] || 0) >= 90 },
   { id: "reader", icon: "📖", name: "Kitobxon", desc: "3 ta bobni o'qing", test: (s) => Object.keys(s.read).length >= 3 },
   { id: "sprint10", icon: "⚡", name: "Chaqmoq", desc: "Sprintda 10+ ball", test: (s) => (s.best.sprint || 0) >= 10 },
   { id: "sprint20", icon: "🌩️", name: "Bo'ron", desc: "Sprintda 20+ ball", test: (s) => (s.best.sprint || 0) >= 20 },

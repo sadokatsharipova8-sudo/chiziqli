@@ -9,6 +9,7 @@ const ROUTES = {
   kirish: () => import("./pages/kirish.js"),
   darslik: () => import("./pages/darslik.js"),
   taqdimot: () => import("./pages/taqdimot.js"),
+  video: () => import("./pages/video.js"),
   lab: () => import("./pages/lab.js"),
   mashq: () => import("./pages/mashq.js"),
   takrorlash: () => import("./pages/takrorlash.js"),

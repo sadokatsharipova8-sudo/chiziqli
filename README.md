@@ -7,12 +7,13 @@ Qurish (build) bosqichi yo'q — oddiy HTML/CSS/JS. Jonli viktorina uchun Cloudf
 
 | Bo'lim | Nima qiladi | Metodika |
 |---|---|---|
-| 📘 Darslik | Fan dasturidagi 18 mavzu (I qism — chiziqli algebra, II qism — analitik geometriya), Ivleva (2014) va Karchevskiy (2012) darsliklari asosida; Markdown boblar, LaTeX formulalar, ichki «O'zingizni tekshiring» savollari, PDF ko'rinish | Retrieval practice, flipped classroom |
-| 🎞 Taqdimotlar | Har bir mavzu bo'yicha 30+ slaydli ma'ruza taqdimoti (jami 566 slayd): ta'riflar, qadamma-qadam misollar, interaktiv savollar; to'liq ekran, ← → tugmalari, telefonda surish. Fayllar: `public/content/taqdimotlar/NN.md`, slaydlar `---` qatori bilan ajratiladi | Ma'ruza + faol o'qitish |
+| 📘 Darslik | Fan 2 semestr o'qitiladi: 36 mavzu (1-semestr — chiziqli algebra, 18 mavzu; 2-semestr — analitik geometriya, 18 mavzu), Ivleva (2014) va Karchevskiy (2012) darsliklari asosida; Markdown boblar, LaTeX formulalar, ichki «O'zingizni tekshiring» savollari, PDF ko'rinish | Retrieval practice, flipped classroom |
+| 🎞 Taqdimotlar | Har bir mavzu bo'yicha 30+ slaydli ma'ruza taqdimoti (36 ta taqdimot, jami 1097 slayd): ta'riflar, qadamma-qadam misollar, interaktiv savollar; to'liq ekran, ← → tugmalari, telefonda surish. Fayllar: `public/content/taqdimotlar/1-01.md` … `2-18.md`, slaydlar `---` qatori bilan ajratiladi | Ma'ruza + faol o'qitish |
+| 🎬 Video-darslar | Har bir mavzu bo'yicha 1,5–2 daqiqalik qisqa video-dars (36 ta): mavzuning dolzarbligi, hayot bilan bog'liqligi, asosiy mazmuni. Brauzerda sahnalar, subtitrlar va (ovoz mavjud bo'lsa) diktor ovozi bilan ijro etiladi; «Video fayl qilib yuklab olish» — .webm fayl. Ssenariylar: `public/content/videolar/1-01.md` … `2-18.md` | Flipped classroom |
 | 🔬 Laboratoriya | Chiziqli almashtirish (3Blue1Brown uslubi), 2D/3D vektorlar, konus kesimlari; sistemalarni Gauss, matritsaviy usul va Kramer qoidasi bilan yechish; determinantni Sarryus, yoyish va Gauss usullarida hisoblash; matritsa rangi va bazis minor; matritsa kalkulyatori — hammasi qadamma-qadam | Vizual intuitsiya (MIT 18.06) |
-| 🎯 Mashqlar | 18 mavzu bo'yicha 44 xil masala generatori, cheksiz yangi masalalar, maslahatlar, to'liq yechim, mavzu bo'yicha o'zlashtirish darajasi | Mastery learning, worked examples, interleaving |
-| 🔁 Takrorlash | Leitner qutilari (1-3-7-16-35 kun) | Spaced repetition |
-| 📝 Mustaqil ish | 4 ta hisob-grafik ish, oraliq va yakuniy nazorat; har talabaga shaxsiy variant, avtomatik tekshirish, tasdiqlash kodi | Individual variantlar (WeBWorK) |
+| 🎯 Mashqlar | 36 mavzu bo'yicha 61 xil masala generatori (semestrlar bo'yicha guruhlangan), cheksiz yangi masalalar, maslahatlar, to'liq yechim, mavzu bo'yicha o'zlashtirish darajasi | Mastery learning, worked examples, interleaving |
+| 🔁 Takrorlash | Leitner qutilari (1-3-7-16-35 kun), 192 ta test savoli (har mavzuga kamida 5 ta) | Spaced repetition |
+| 📝 Mustaqil ish | Har semestrda 4 ta hisob-grafik ish, oraliq va yakuniy nazorat (jami 12 ta); har talabaga shaxsiy variant, avtomatik tekshirish, tasdiqlash kodi | Individual variantlar (WeBWorK) |
 | 🏆 Jonli viktorina | Kahoot uslubi: PIN/QR, telefondan javob, tezlik ballari, reyting, shohsupa, CSV | Peer Instruction (Mazur, Harvard) |
 | 🎡 Ismlar g'ildiragi | Wheel of Names + tasodifiy savol | Cold calling |
 | 🧩 Savollar taxtasi | Jeopardy uslubida jamoaviy o'yin | Geymifikatsiya |
@@ -39,7 +40,7 @@ XP, darajalar, kunlik seriya va 16 ta nishon — har bir talabaning brauzerida s
 
 ### O'qituvchi paroli
 
-**O'tilgan mavzular:** O'qituvchi paneli → **📅 O'tilgan mavzular** — o'yinlar va takrorlashda faqat shu mavzugacha savollar chiqadi (sozlama serverda, barcha talabalar uchun). Har bir o'yinda mavzularni alohida tanlash mumkin.
+**O'tilgan mavzular:** O'qituvchi paneli → **📅 O'tilgan mavzular** — o'yinlar va takrorlashda faqat shu mavzugacha savollar chiqadi (semestr va mavzu tanlanadi) (sozlama serverda, barcha talabalar uchun). Har bir o'yinda mavzularni alohida tanlash mumkin.
 
 Saytga faqat login va parol bilan kiriladi. O'qituvchi paneli (javob kalitlari, bosma variantlar, talabalar hisoblari) va jonli viktorina xonasini yaratish faqat o'qituvchiga ochiq. Jonli viktorinaga telefondan PIN orqali qo'shilish uchun kirish shart emas.
 
@@ -60,13 +61,15 @@ public/content/
 ├── boblar.json        ← boblar ro'yxati (+ ixtiyoriy PDF)
 ├── boblar/*.md        ← har bir bob — alohida Markdown fayl
 ├── savollar.js        ← test savollari banki (o'yinlar va takrorlash uchun)
-└── mustaqil.js        ← mustaqil ishlar ro'yxati va muddatlari
+├── mustaqil.js        ← mustaqil ishlar ro'yxati va muddatlari (sem: 1 yoki 2)
+├── taqdimotlar/*.md   ← taqdimotlar (slaydlar --- bilan ajratiladi)
+└── videolar/*.md      ← video-darslar ssenariylari (sahnalar ---, diktor matni > qatorida)
 ```
 
-**Bob qo'shish:** `public/content/boblar/19-yangi.md` faylini yarating va `boblar.json` ga qo'shing:
+**Bob qo'shish:** `public/content/boblar/3-01-yangi.md` faylini yarating va `boblar.json` ga qo'shing:
 
 ```json
-{ "id": "19", "qism": "III qism. Qo'shimcha", "fayl": "boblar/19-yangi.md", "nomi": "Yangi bob", "mavzu": "matritsa", "daqiqa": 20 }
+{ "id": "3-01", "qism": "Qo'shimcha", "fayl": "boblar/3-01-yangi.md", "nomi": "Yangi bob", "mavzu": "matritsa", "daqiqa": 20 }
 ```
 
 **PDF darslik:** faylni `public/content/darslik.pdf` qilib qo'ying va `boblar.json` da `"pdf": "content/darslik.pdf"` deb yozing.
@@ -114,7 +117,7 @@ public/css/style.css   ← dizayn (yorug'/qorong'i rejim, mobil)
 public/js/
 ├── app.js             ← marshrutlash
 ├── math.js            ← kasrlar, matritsalar, Gauss usuli (qadamlari bilan)
-├── generators.js      ← 18 mavzu (TOPICS) va 44 ta masala generatori
+├── generators.js      ← 36 mavzu (TOPICS: sem, no) va 61 ta masala generatori
 ├── store.js           ← XP, darajalar, nishonlar, takrorlash
 └── pages/*.js         ← har bir bo'lim
 ```

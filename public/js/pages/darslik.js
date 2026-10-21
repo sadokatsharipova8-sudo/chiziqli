@@ -13,6 +13,9 @@ export async function loadManifest() {
 
 const answered = new Set();
 
+/** "1-07" → "7-mavzu" (semestr sarlavhada ko'rsatiladi). */
+export const mavzuNo = (id) => (/^\d-\d\d$/.test(id) ? `${+id.slice(2)}-mavzu` : `${id}-mavzu`);
+
 /** Markdown matnni elementga chizadi va ichidagi savollarni jonlantiradi. */
 export function renderChapter(target, text, keyPrefix = "") {
   const { html, mcqs } = md(text);
@@ -57,7 +60,7 @@ export async function render(el, params) {
         ${list.filter((b) => (b.qism || "") === qism).map((b) => {
           const t = topicById(b.mavzu);
           return `<a class="tile" href="#/darslik/${b.id}" style="border-top:4px solid ${t?.color || "var(--primary)"}">
-            <div class="row between"><span class="pill">${esc(b.id)}-mavzu</span>${s.read[b.id] ? '<span class="pill" style="color:var(--ok)">✓ O\'qildi</span>' : `<span class="small muted">~${b.daqiqa || 20} daqiqa</span>`}</div>
+            <div class="row between"><span class="pill">${esc(mavzuNo(b.id))}</span>${s.read[b.id] ? '<span class="pill" style="color:var(--ok)">✓ O\'qildi</span>' : `<span class="small muted">~${b.daqiqa || 20} daqiqa</span>`}</div>
             <h3>${esc(b.nomi)}</h3>
             <p>${t ? esc(t.name) : ""}</p></a>`;
         }).join("")}
@@ -93,6 +96,7 @@ export async function render(el, params) {
       <p class="muted">Bilimni mustahkamlash uchun keyingi qadam — mavzu bo'yicha mashq.</p>
       <div class="row">
         <button class="btn ${s.read[bob.id] ? "" : "primary"}" id="mark-read">${s.read[bob.id] ? "✓ O'qilgan" : "✓ O'qidim (+30 XP)"}</button>
+        <a class="btn" href="#/video/${bob.id}">🎬 Video-dars</a>
         <a class="btn" href="#/taqdimot/${bob.id}">🎞 Taqdimot</a>
         ${t ? `<a class="btn" href="#/mashq/${t.id}">🎯 «${esc(t.name)}» bo'yicha mashq</a>` : ""}
       </div>

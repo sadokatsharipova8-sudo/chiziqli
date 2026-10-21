@@ -7,7 +7,7 @@ import { buildVariant, verifyCode } from "./mustaqil.js";
 import { renderChapter } from "./darslik.js";
 import { $, $$, esc, mathText, answerTex, download, toast } from "../ui.js";
 import { teacherApi } from "../auth.js";
-import { getCovered, setCovered } from "../course.js";
+import { getCovered, setCovered, coveredLabel, SEM_NAMES } from "../course.js";
 
 const TABS = [["talabalar", "👥 Talabalar"], ["kurs", "📅 O'tilgan mavzular"], ["tekshirish", "✅ Natijalarni tekshirish"], ["kalit", "🔑 Variant kaliti"], ["bosma", "🖨 Bosma variantlar"], ["kontent", "📚 Darslik qo'shish"], ["bank", "❓ Savollar banki"]];
 
@@ -28,7 +28,7 @@ async function kurs(box) {
       <div class="card">
         <h3>📅 Qaysi mavzugacha o'tildi?</h3>
         <p class="small muted">O'yinlar (jonli viktorina, g'ildirak, savollar taxtasi, sprint, xotira) va takrorlash bo'limida faqat shu mavzugacha bo'lgan savollar chiqadi. Sozlama barcha talabalar uchun bir vaqtda o'zgaradi.</p>
-        <select id="cov" style="width:100%">${TOPICS.map((t, i) => `<option value="${i + 1}" ${i + 1 === cur ? "selected" : ""}>1–${i + 1}-mavzular · oxirgisi: ${esc(t.name)}</option>`).join("")}</select>
+        <select id="cov" style="width:100%">${[1, 2].map((s) => `<optgroup label="${SEM_NAMES[s]}">${TOPICS.map((t, i) => t.sem !== s ? "" : `<option value="${i + 1}" ${i + 1 === cur ? "selected" : ""}>${s}-semestr, 1–${t.no}-mavzular · oxirgisi: ${esc(t.name)}</option>`).join("")}</optgroup>`).join("")}</select>
         <div class="row mt"><button class="btn primary" id="save">Saqlash</button><button class="btn sm" id="next">➕ Keyingi mavzu o'tildi</button></div>
         <div id="msg" class="mt"></div>
       </div>
@@ -38,7 +38,7 @@ async function kurs(box) {
       </div>
     </div>`;
   const paint = (n) => {
-    $("#list", box).innerHTML = TOPICS.map((t, i) => `<div style="padding:3px 0;${i < n ? "" : "opacity:.5"}">${i < n ? "✅" : "🔒"} <b>${i + 1}.</b> ${esc(t.name)}</div>`).join("");
+    $("#list", box).innerHTML = TOPICS.map((t, i) => `${t.no === 1 ? `<div class="mt"><b>${SEM_NAMES[t.sem]}</b></div>` : ""}<div style="padding:3px 0;${i < n ? "" : "opacity:.5"}">${i < n ? "✅" : "🔒"} <b>${t.no}.</b> ${esc(t.name)}</div>`).join("");
   };
   paint(cur);
   $("#cov", box).addEventListener("change", (e) => paint(+e.target.value));
@@ -47,7 +47,7 @@ async function kurs(box) {
       const v = await setCovered(n);
       $("#cov", box).value = String(v);
       paint(v);
-      $("#msg", box).innerHTML = `<div class="result-banner ok">Saqlandi: o'yinlarda 1–${v}-mavzular savollari chiqadi.</div>`;
+      $("#msg", box).innerHTML = `<div class="result-banner ok">Saqlandi. ${coveredLabel(v)} — o'yinlarda faqat shu mavzular savollari chiqadi.</div>`;
     } catch (err) {
       $("#msg", box).innerHTML = `<div class="result-banner bad">${esc(err.message)}</div>`;
     }
@@ -324,7 +324,7 @@ function bank(box) {
       <table class="tbl"><thead><tr><th>Mavzu</th><th>Savollar</th><th>Oson / O'rta / Qiyin</th><th>Generatorlar</th></tr></thead><tbody>
       ${TOPICS.map((t) => {
         const qs = SAVOLLAR.filter((q) => q.topic === t.id);
-        return `<tr><td>${esc(t.name)}</td><td>${qs.length}</td><td>${[1, 2, 3].map((d) => qs.filter((q) => q.d === d).length).join(" / ")}</td><td class="small">${GENERATORS.filter((g) => g.topic === t.id).map((g) => `<span class="mono">${g.id}</span>`).join(", ")}</td></tr>`;
+        return `<tr><td><span class="muted">${t.sem}.${t.no}</span> ${esc(t.name)}</td><td>${qs.length}</td><td>${[1, 2, 3].map((d) => qs.filter((q) => q.d === d).length).join(" / ")}</td><td class="small">${GENERATORS.filter((g) => g.topic === t.id).map((g) => `<span class="mono">${g.id}</span>`).join(", ")}</td></tr>`;
       }).join("")}</tbody></table>
     </div>
     <div class="card"><h3>Barcha savollar</h3><div class="stack">${SAVOLLAR.map((q) => `<div class="small" style="border-bottom:1px dashed var(--line);padding-bottom:8px"><span class="pill">${esc(q.id)}</span> ${mathText(q.q)} → <b style="color:var(--ok)">${mathText(q.options[q.correct])}</b></div>`).join("")}</div></div>`;

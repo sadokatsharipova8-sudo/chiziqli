@@ -1,4 +1,4 @@
-import { getCovered } from "../course.js";
+import { getCovered, coveredLabel } from "../course.js";
 import { TOPICS } from "../generators.js";
 import { looksTeacher } from "../auth.js";
 import { esc } from "../ui.js";
@@ -17,7 +17,7 @@ export async function render(el) {
     <div class="page-head"><h1>🎮 O'yinlar</h1>
       <p>Geymifikatsiya — faollik va motivatsiyani oshiradi. Har bir o'yin dars mazmuniga bog'langan: savollar banki va masala generatorlaridan foydalanadi.</p></div>
     <div class="card mb row between" style="gap:10px">
-      <span>📅 ${cov < TOPICS.length ? `O'yinlarda <b>1–${cov}-mavzular</b> savollari chiqadi (oxirgisi: ${esc(TOPICS[cov - 1].name)}). Har bir o'yinda mavzularni alohida tanlash mumkin.` : "O'yinlarda barcha mavzular savollari chiqadi. Har bir o'yinda mavzularni alohida tanlash mumkin."}</span>
+      <span>📅 ${cov < TOPICS.length ? `${coveredLabel(cov)}. O'yinlarda faqat shu mavzular savollari chiqadi (oxirgisi: ${esc(TOPICS[cov - 1].name)}). Har bir o'yinda mavzularni alohida tanlash mumkin.` : "O'yinlarda barcha mavzular savollari chiqadi. Har bir o'yinda mavzularni alohida tanlash mumkin."}</span>
       ${looksTeacher() ? `<a class="btn sm" href="#/oqituvchi/kurs">O'tilgan mavzularni belgilash</a>` : ""}
     </div>
     <div class="grid g3">
