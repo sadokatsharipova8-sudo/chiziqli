@@ -1,8 +1,8 @@
 // Ismlar g'ildiragi (Wheel of Names) — tasodifiy talaba + ixtiyoriy tasodifiy savol.
 
 import { SAVOLLAR } from "../../content/savollar.js";
-import { TOPICS } from "../generators.js";
-import { $, esc, modal, renderMcq, sound, confetti, shuffle } from "../ui.js";
+import { topicPicker } from "../course.js";
+import { $, esc, modal, renderMcq, sound, confetti, shuffle, toast } from "../ui.js";
 
 const KEY = "cag-wheel-names";
 const COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#22c55e", "#0ea5e9", "#ef4444", "#8b5cf6", "#14b8a6", "#f97316", "#84cc16"];
@@ -29,12 +29,15 @@ export function render(el) {
         <div class="card stack">
           <label class="row small"><input type="checkbox" id="remove"> G'olibni ro'yxatdan olib tashlash</label>
           <label class="row small"><input type="checkbox" id="ask" checked> Tanlangan talabaga savol berish</label>
-          <select id="topic"><option value="">Barcha mavzular</option>${TOPICS.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select>
+          <div class="small muted">Savollar shu mavzulardan tushadi:</div>
+          <div id="tp"></div>
         </div>
         <div class="card" id="history"><h3>Tarix</h3><p class="muted small">Hali hech kim tanlanmagan</p></div>
       </div>
     </div>`;
 
+  let picker = null;
+  topicPicker($("#tp", el), { key: "wheel" }).then((p) => (picker = p));
   const cv = $("#wheel", el), ctx = cv.getContext("2d");
   const history = [];
 
@@ -99,9 +102,10 @@ export function render(el) {
     history.unshift(name);
     $("#history", el).innerHTML = `<h3>Tarix</h3><ol style="margin:0;padding-left:20px">${history.slice(0, 12).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>`;
     const ask = $("#ask", el).checked;
-    const topic = $("#topic", el).value;
-    const pool = SAVOLLAR.filter((q) => !topic || q.topic === topic);
+    const topics = picker ? picker.get() : [];
+    const pool = SAVOLLAR.filter((q) => topics.includes(q.topic));
     const q = ask && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+    if (ask && !pool.length) setTimeout(() => toast("Savol uchun kamida bitta mavzu tanlang"), 400);
     const m = modal(`<div class="center"><div class="muted">Tanlandi:</div><h1 style="font-size:44px;margin:6px 0 14px">🎉 ${esc(name)}</h1></div>${q ? `<div class="mcq bare" id="wq"></div>` : ""}<div class="row mt" style="justify-content:center"><button class="btn primary" id="ok">Yopish</button></div>`, { wide: !!q });
     if (q) renderMcq($("#wq", m.el), q, { shuffle: true });
     $("#ok", m.el).addEventListener("click", m.close);

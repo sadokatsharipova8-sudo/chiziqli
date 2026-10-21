@@ -3,7 +3,7 @@
 // #/qoshilish  — talaba (PIN orqali telefondan qo'shiladi)
 
 import { SAVOLLAR } from "../../content/savollar.js";
-import { TOPICS } from "../generators.js";
+import { topicPicker } from "../course.js";
 import { store, addXP } from "../store.js";
 import { teacherToken } from "../auth.js";
 import { $, $$, esc, mathText, toast, confetti, sound, download, shuffle, parseMcq } from "../ui.js";
@@ -57,7 +57,7 @@ function renderHost(el) {
           <div class="tabs mt" style="margin-bottom:12px"><button class="tab active" data-src="bank">Savollar banki</button><button class="tab" data-src="custom">O'z savollarim</button></div>
           <div id="src-bank">
             <div class="small muted mb">Mavzular:</div>
-            <div class="row small">${TOPICS.map((t) => `<label><input type="checkbox" class="tp" value="${t.id}" checked> ${esc(t.name)}</label>`).join("")}</div>
+            <div id="tp"></div>
             <div class="row mt"><label class="field" style="flex:1">Savollar soni<input id="count" type="number" min="1" max="50" value="10"></label>
             <label class="field" style="flex:1">Qiyinlik<select id="diff"><option value="0">Aralash</option><option value="1">Oson</option><option value="2">O'rta</option><option value="3">Qiyin</option></select></label></div>
           </div>
@@ -82,7 +82,8 @@ function renderHost(el) {
           </ol>
         </div>
       </div>`;
-    let src = "bank";
+    let src = "bank", picker = null;
+    topicPicker($("#tp", el), { key: "jonli" }).then((p) => (picker = p));
     $$("[data-src]", el).forEach((b) => b.addEventListener("click", () => {
       src = b.dataset.src;
       $$("[data-src]", el).forEach((x) => x.classList.toggle("active", x === b));
@@ -94,7 +95,7 @@ function renderHost(el) {
       const time = +$("#time", el).value, shuf = $("#shuf", el).checked;
       let qs;
       if (src === "bank") {
-        const topics = $$(".tp:checked", el).map((x) => x.value), d = +$("#diff", el).value;
+        const topics = picker ? picker.get() : [], d = +$("#diff", el).value;
         qs = shuffle(SAVOLLAR.filter((q) => topics.includes(q.topic) && (!d || q.d === d))).slice(0, Math.max(1, +$("#count", el).value || 10));
       } else qs = parseCustom($("#custom", el).value);
       if (!qs.length) return toast("Savollar topilmadi — mavzular yoki matnni tekshiring");

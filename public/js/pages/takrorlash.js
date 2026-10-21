@@ -4,9 +4,11 @@ import { SAVOLLAR } from "../../content/savollar.js";
 import { store, dueIds, newIds, leitnerUpdate, addXP } from "../store.js";
 import { renderMcq, $, esc, shuffle, confetti } from "../ui.js";
 import { TOPICS, topicById } from "../generators.js";
+import { coveredIds } from "../course.js";
 
-export function render(el) {
-  const all = SAVOLLAR.map((q) => q.id);
+export async function render(el) {
+  const open = await coveredIds();
+  const all = SAVOLLAR.filter((q) => open.includes(q.topic)).map((q) => q.id);
   const s = store.get();
   const due = dueIds(all), fresh = newIds(all);
   const boxes = [0, 1, 2, 3, 4, 5].map((b) => all.filter((id) => (s.leitner[id]?.box ?? -1) === b).length);
@@ -26,8 +28,9 @@ export function render(el) {
       <div class="row">
         <button class="btn primary" data-mode="due" ${due.length ? "" : "disabled"}>🔁 Muddati kelganlar (${due.length})</button>
         <button class="btn" data-mode="new" ${fresh.length ? "" : "disabled"}>✨ 10 ta yangi karta</button>
-        <select id="topic-sel"><option value="">Mavzu bo'yicha…</option>${TOPICS.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select>
+        <select id="topic-sel"><option value="">Mavzu bo'yicha…</option>${TOPICS.map((t, i) => `<option value="${t.id}" ${open.includes(t.id) ? "" : "disabled"}>${i + 1}. ${esc(t.name)}${open.includes(t.id) ? "" : " 🔒"}</option>`).join("")}</select>
       </div>
+      ${open.length < TOPICS.length ? `<p class="small muted mt" style="margin-bottom:0">Faqat o'tilgan mavzular (1–${open.length}) savollari takrorlanadi.</p>` : ""}
     </div>
     <div id="session"></div>`;
 

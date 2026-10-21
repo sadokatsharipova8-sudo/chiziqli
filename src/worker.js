@@ -72,6 +72,16 @@ export default {
       return json({ ok: await checkToken(env, token) });
     }
 
+    // ---- Kurs sozlamalari (o'tilgan mavzular) ----
+    if (url.pathname === "/api/settings") {
+      const acc = env.ACCOUNTS.get(env.ACCOUNTS.idFromName("main"));
+      if (request.method === "GET") return json(await acc.getSettings());
+      if (request.method === "POST") {
+        if (!(await checkToken(env, request.headers.get("x-teacher-token")))) return json({ error: "Faqat o'qituvchi uchun" }, 401);
+        return json(await acc.setSettings(await readJson(request)));
+      }
+    }
+
     // ---- Talabalar hisoblari ----
     if (url.pathname.startsWith("/api/student") && request.method === "POST") {
       const acc = env.ACCOUNTS.get(env.ACCOUNTS.idFromName("main"));
@@ -577,6 +587,18 @@ export class Accounts extends DurableObject {
     const { password, salt, hash } = await this.newPassword();
     this.sql.exec(`UPDATE students SET salt = ?, hash = ?, ver = ver + 1, fails = 0, lock_until = 0 WHERE login = ?`, salt, hash, login);
     return { ok: true, login, name: r.name, group: r.grp, password };
+  }
+
+  async getSettings() {
+    const row = this.sql.exec(`SELECT v FROM meta WHERE k = 'covered'`).toArray()[0];
+    return { covered: row ? +row.v : null };
+  }
+
+  async setSettings({ covered }) {
+    const n = Math.round(+covered);
+    if (!(n >= 1 && n <= 50)) return { error: "Mavzu raqami noto'g'ri" };
+    this.sql.exec(`INSERT INTO meta (k, v) VALUES ('covered', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v`, String(n));
+    return { ok: true, covered: n };
   }
 
   async remove(login, group) {

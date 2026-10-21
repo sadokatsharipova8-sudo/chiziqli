@@ -2,7 +2,8 @@
 
 import { SAVOLLAR } from "../../content/savollar.js";
 import { TOPICS } from "../generators.js";
-import { $, $$, esc, mathText, modal, sound, confetti, shuffle } from "../ui.js";
+import { topicPicker } from "../course.js";
+import { $, $$, esc, mathText, modal, sound, confetti, shuffle, toast } from "../ui.js";
 
 const VALUES = [100, 200, 300, 400, 500];
 
@@ -16,7 +17,8 @@ export function render(el) {
       <div class="grid g2">
         <div class="card">
           <h3>Mavzular (5 tagacha)</h3>
-          <div class="stack small">${TOPICS.map((t, i) => `<label class="row"><input type="checkbox" class="tp" value="${t.id}" ${i < 5 ? "checked" : ""}> ${esc(t.name)}</label>`).join("")}</div>
+          <p class="small muted" style="margin-top:0">Har bir mavzu — taxtadagi bitta ustun.</p>
+          <div id="tp"></div>
         </div>
         <div class="card">
           <h3>Jamoalar</h3>
@@ -25,8 +27,11 @@ export function render(el) {
           <button class="btn primary lg" id="go" style="width:100%">▶ O'yinni boshlash</button>
         </div>
       </div>`;
+    let picker = null;
+    topicPicker($("#tp", el), { key: "taxta", max: 5 }).then((p) => (picker = p));
     $("#go", el).addEventListener("click", () => {
-      const topics = $$(".tp:checked", el).map((x) => x.value).slice(0, 5);
+      const topics = (picker ? picker.get() : []).slice(0, 5);
+      if (!topics.length) return toast("Kamida bitta mavzu tanlang");
       const names = $("#teams", el).value.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 6);
       if (topics.length < 1 || names.length < 1) return;
       teams = names.map((n) => ({ name: n, score: 0 }));

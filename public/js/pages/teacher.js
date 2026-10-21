@@ -7,8 +7,9 @@ import { buildVariant, verifyCode } from "./mustaqil.js";
 import { renderChapter } from "./darslik.js";
 import { $, $$, esc, mathText, answerTex, download, toast } from "../ui.js";
 import { teacherApi } from "../auth.js";
+import { getCovered, setCovered } from "../course.js";
 
-const TABS = [["talabalar", "👥 Talabalar"], ["tekshirish", "✅ Natijalarni tekshirish"], ["kalit", "🔑 Variant kaliti"], ["bosma", "🖨 Bosma variantlar"], ["kontent", "📚 Darslik qo'shish"], ["bank", "❓ Savollar banki"]];
+const TABS = [["talabalar", "👥 Talabalar"], ["kurs", "📅 O'tilgan mavzular"], ["tekshirish", "✅ Natijalarni tekshirish"], ["kalit", "🔑 Variant kaliti"], ["bosma", "🖨 Bosma variantlar"], ["kontent", "📚 Darslik qo'shish"], ["bank", "❓ Savollar banki"]];
 
 export function render(el, params) {
   const tab = TABS.some((t) => t[0] === params[0]) ? params[0] : "talabalar";
@@ -16,7 +17,43 @@ export function render(el, params) {
     <div class="page-head no-print"><h1>👩‍🏫 O'qituvchi paneli</h1><p>Mustaqil ishlarni tekshirish, kalitlar, bosma variantlar va o'z darsligingizni platformaga joylash.</p></div>
     <div class="tabs no-print">${TABS.map(([id, n]) => `<a class="tab ${id === tab ? "active" : ""}" href="#/oqituvchi/${id}">${n}</a>`).join("")}</div>
     <div id="tbody"></div>`;
-  ({ talabalar, tekshirish, kalit, bosma, kontent, bank })[tab]($("#tbody", el));
+  ({ talabalar, kurs, tekshirish, kalit, bosma, kontent, bank })[tab]($("#tbody", el));
+}
+
+// ---------------- O'tilgan mavzular ----------------
+async function kurs(box) {
+  const cur = await getCovered();
+  box.innerHTML = `
+    <div class="grid g2">
+      <div class="card">
+        <h3>📅 Qaysi mavzugacha o'tildi?</h3>
+        <p class="small muted">O'yinlar (jonli viktorina, g'ildirak, savollar taxtasi, sprint, xotira) va takrorlash bo'limida faqat shu mavzugacha bo'lgan savollar chiqadi. Sozlama barcha talabalar uchun bir vaqtda o'zgaradi.</p>
+        <select id="cov" style="width:100%">${TOPICS.map((t, i) => `<option value="${i + 1}" ${i + 1 === cur ? "selected" : ""}>1–${i + 1}-mavzular · oxirgisi: ${esc(t.name)}</option>`).join("")}</select>
+        <div class="row mt"><button class="btn primary" id="save">Saqlash</button><button class="btn sm" id="next">➕ Keyingi mavzu o'tildi</button></div>
+        <div id="msg" class="mt"></div>
+      </div>
+      <div class="card">
+        <h3>Mavzular holati</h3>
+        <div id="list" class="small"></div>
+      </div>
+    </div>`;
+  const paint = (n) => {
+    $("#list", box).innerHTML = TOPICS.map((t, i) => `<div style="padding:3px 0;${i < n ? "" : "opacity:.5"}">${i < n ? "✅" : "🔒"} <b>${i + 1}.</b> ${esc(t.name)}</div>`).join("");
+  };
+  paint(cur);
+  $("#cov", box).addEventListener("change", (e) => paint(+e.target.value));
+  const save = async (n) => {
+    try {
+      const v = await setCovered(n);
+      $("#cov", box).value = String(v);
+      paint(v);
+      $("#msg", box).innerHTML = `<div class="result-banner ok">Saqlandi: o'yinlarda 1–${v}-mavzular savollari chiqadi.</div>`;
+    } catch (err) {
+      $("#msg", box).innerHTML = `<div class="result-banner bad">${esc(err.message)}</div>`;
+    }
+  };
+  $("#save", box).addEventListener("click", () => save(+$("#cov", box).value));
+  $("#next", box).addEventListener("click", () => save(Math.min(TOPICS.length, +$("#cov", box).value + 1)));
 }
 
 // ---------------- Talabalar hisoblari ----------------

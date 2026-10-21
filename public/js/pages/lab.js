@@ -1,8 +1,8 @@
 // Interaktiv laboratoriya: chiziqli almashtirish, vektorlar, egri chiziqlar, 3D vektorlar,
-// Gauss usuli va matritsa kalkulyatori (qadamma-qadam).
+// Gauss usuli, matritsaviy usul va Kramer, determinant, rang va matritsa kalkulyatori (qadamma-qadam).
 
 import { $, $$, esc, mathText, texHtml } from "../ui.js";
-import { F, Fr, parseNum, rrefSteps, texMat, det, inverse, mmul, madd, mscale, transpose, toFr, texLin } from "../math.js";
+import { F, Fr, parseNum, rrefSteps, texMat, det, inverse, mmul, madd, mscale, transpose, toFr, texLin, minor } from "../math.js";
 import { addXP } from "../store.js";
 
 const TABS = [
@@ -11,6 +11,9 @@ const TABS = [
   ["fazo", "🧊 3D vektorlar"],
   ["egri", "⭕ Egri chiziqlar"],
   ["gauss", "🧮 Gauss usuli"],
+  ["matritsaviy", "📐 Matritsaviy usul va Kramer"],
+  ["determinant", "|A| Determinant hisoblash"],
+  ["rang", "📶 Matritsa rangi"],
   ["kalkulyator", "▦ Matritsa kalkulyatori"],
 ];
 
@@ -25,7 +28,7 @@ export function render(el, params) {
     <div id="lab-body"></div>`;
   if (!visited.has(tab)) { visited.add(tab); addXP(5, "laboratoriya"); }
   const body = $("#lab-body", el);
-  return { almashtirish: labTransform, vektorlar: labVectors, fazo: lab3D, egri: labConics, gauss: labGauss, kalkulyator: labCalc }[tab](body);
+  return { almashtirish: labTransform, vektorlar: labVectors, fazo: lab3D, egri: labConics, gauss: labGauss, matritsaviy: labMatrix, determinant: labDet, rang: labRank, kalkulyator: labCalc }[tab](body);
 }
 
 // ================= Kanvas yordamchilari =================
@@ -697,6 +700,251 @@ function labCalc(body) {
           ${eigen(a, b, c, d).map((e, i) => `<p>${mathText(`Xos vektor $\\vec x_{${i + 1}}$`)} ∥ (${fmt(e.x, 3)}; ${fmt(e.y, 3)})</p>`).join("")}`);
       }
     }
+  });
+  build();
+}
+
+// ================= 7. Matritsaviy usul va Kramer qoidasi =================
+const pt = (x) => (Fr.of(x).n < 0 ? `(${Fr.of(x).tex()})` : Fr.of(x).tex());
+const sizeOpts = (list, val) => list.map((k) => `<option ${k === val ? "selected" : ""}>${k}</option>`).join("");
+
+function randSystem(n) {
+  for (let t = 0; t < 200; t++) {
+    const A = Array.from({ length: n }, () => Array.from({ length: n }, () => Math.floor(Math.random() * 7) - 3));
+    const d = +det(A);
+    if (d !== 0 && Math.abs(d) <= 30) {
+      const sol = Array.from({ length: n }, () => Math.floor(Math.random() * 7) - 3);
+      return A.map((r) => [...r, r.reduce((s, x, k) => s + x * sol[k], 0)]);
+    }
+  }
+  return null;
+}
+
+function labMatrix(body) {
+  let n = 3, method = "matritsa";
+  let values = [[-1, 2, -3, -2], [0, 1, 2, 3], [2, 4, 5, 11]];
+  body.innerHTML = `
+    <div class="grid split">
+      <div class="card">
+        <h3>Sistema ${mathText("$AX = B$")}</h3>
+        <div class="row small">
+          <label>Tartib <select id="n">${sizeOpts([2, 3, 4], n)}</select></label>
+          <label>Usul <select id="meth"><option value="matritsa">Matritsaviy usul (X = A⁻¹B)</option><option value="kramer">Kramer qoidasi</option></select></label>
+        </div>
+        <p class="small muted">Kengaytirilgan matritsa: oxirgi ustun — ozod hadlar. Kasr: 1/2.</p>
+        <div id="mat" style="overflow-x:auto"></div>
+        <div class="row mt"><button class="btn primary" id="solve">Yechish</button><button class="btn sm" id="rand">🎲 Tasodifiy</button></div>
+        <div id="sys" class="mt"></div>
+        <div class="callout callout-eslatma mt"><div class="callout-title">Eslatma</div><div class="small">${mathText("Ikkala usul ham faqat $\\det A \\ne 0$ bo'lganda ishlaydi. $\\det A = 0$ bo'lsa — «Gauss usuli» bo'limidan foydalaning.")}</div></div>
+      </div>
+      <div class="card" id="out"><p class="muted">«Yechish» tugmasini bosing — har bir qadam ko'rsatiladi.</p></div>
+    </div>`;
+  const vars = (k) => (n <= 3 ? ["x", "y", "z"][k] : `x_${k + 1}`);
+  let read;
+  const build = () => { read = matInput($("#mat", body), n, n + 1, values, 1); preview(); };
+  function preview() {
+    try {
+      const M = read();
+      $("#sys", body).innerHTML = mathText(`$$\\begin{cases} ${M.map((r) => `${texLin(r.slice(0, n), Array.from({ length: n }, (_, k) => vars(k)))} = ${r[n].tex()}`).join(" \\\\ ")} \\end{cases}$$`);
+    } catch { $("#sys", body).innerHTML = ""; }
+  }
+  $("#mat", body).addEventListener("input", preview);
+  $("#n", body).addEventListener("change", (e) => { n = +e.target.value; values = randSystem(n); build(); $("#out", body).innerHTML = `<p class="muted">«Yechish» tugmasini bosing.</p>`; });
+  $("#meth", body).addEventListener("change", (e) => (method = e.target.value));
+  $("#rand", body).addEventListener("click", () => { values = randSystem(n); build(); });
+
+  $("#solve", body).addEventListener("click", () => {
+    let M;
+    try { M = read(); } catch (e) { $("#out", body).innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; return; }
+    values = M.map((r) => r.map(String));
+    const A = M.map((r) => r.slice(0, n)), B = M.map((r) => [r[n]]);
+    const D = det(A);
+    const X = Array.from({ length: n }, (_, k) => `${vars(k)}`);
+    let html = `<h3>${method === "kramer" ? "Kramer qoidasi" : "Matritsaviy usul"}</h3>
+      <div class="step"><div class="op">1. Matritsaviy ko'rinish ${mathText("$AX = B$")}</div>${mathText(`$$${texMat(A)}\\begin{pmatrix} ${X.join(" \\\\ ")} \\end{pmatrix} = ${texMat(B)}$$`)}</div>
+      <div class="step"><div class="op">2. Asosiy determinant</div>${mathText(`$$\\Delta = \\det A = ${texMat(A, { br: "v" })} = ${D.tex()}$$`)}</div>`;
+    if (D.isZero()) {
+      $("#out", body).innerHTML = html + `<div class="result-banner bad">${mathText("$\\Delta = 0$ — matritsa xos, bu usulni qo'llab bo'lmaydi. Sistema yo yechimsiz, yo cheksiz ko'p yechimga ega: «Gauss usuli» bo'limida tekshiring.")}</div>`;
+      return;
+    }
+    let xs;
+    if (method === "kramer") {
+      xs = [];
+      for (let j = 0; j < n; j++) {
+        const Aj = A.map((r, i) => r.map((x, k) => (k === j ? B[i][0] : x)));
+        const Dj = det(Aj);
+        xs.push(Dj.div(D));
+        html += `<div class="step"><div class="op">${j + 3}. ${mathText(`$\\Delta_{${j + 1}}$`)}: ${j + 1}-ustun o'rniga ozod hadlar</div>${mathText(`$$\\Delta_{${j + 1}} = ${texMat(Aj, { br: "v" })} = ${Dj.tex()},\\qquad ${vars(j)} = \\frac{\\Delta_{${j + 1}}}{\\Delta} = \\frac{${Dj.tex()}}{${D.tex()}} = ${Dj.div(D).tex()}$$`)}</div>`;
+      }
+    } else {
+      // Algebraik to'ldiruvchilar
+      const C = A.map((r, i) => r.map((_, j) => {
+        const mn = minor(A, i, j);
+        const md = n === 1 ? F(1) : det(mn);
+        return { mn, md, v: (i + j) % 2 ? md.neg() : md };
+      }));
+      const list = n <= 3
+        ? C.flatMap((r, i) => r.map((c, j) => `A_{${i + 1}${j + 1}} = ${(i + j) % 2 ? "-" : "+"}${n === 2 ? pt(c.mn[0][0]) : texMat(c.mn, { br: "v" })} = ${c.v.tex()}`))
+        : C.flatMap((r, i) => r.map((c, j) => `A_{${i + 1}${j + 1}} = ${c.v.tex()}`));
+      html += `<div class="step"><div class="op">3. Algebraik to'ldiruvchilar ${mathText("$A_{ij} = (-1)^{i+j}M_{ij}$")}</div><div class="cof-grid">${list.map((s) => `<div>${mathText("$" + s + "$")}</div>`).join("")}</div></div>`;
+      const adj = A.map((_, i) => A.map((_, j) => C[j][i].v));
+      const inv = adj.map((r) => r.map((x) => x.div(D)));
+      html += `<div class="step"><div class="op">4. Biriktirilgan matritsa (to'ldiruvchilar <b>transponirlangan</b> holda) va teskari matritsa</div>${mathText(`$$A^{-1} = \\frac{1}{\\Delta}\\widetilde A^{\\,T} = \\frac{1}{${D.tex()}}${texMat(adj)} = ${texMat(inv)}$$`)}</div>`;
+      const Xv = mmul(inv, B), adjB = mmul(adj, B);
+      xs = Xv.map((r) => r[0]);
+      html += `<div class="step"><div class="op">5. Yechim ${mathText("$X = A^{-1}B$")}</div>${mathText(`$$X = \\frac{1}{${D.tex()}}${texMat(adj)}${texMat(B)} = \\frac{1}{${D.tex()}}${texMat(adjB)} = ${texMat(Xv)}$$`)}</div>`;
+    }
+    const check = mmul(A, xs.map((x) => [x])).every((r, i) => r[0].eq(B[i][0]));
+    html += `<div class="result-banner ok mt">Javob: ${mathText(`$${xs.map((x, k) => `${vars(k)} = ${x.tex()}`).join(",\\ ")}$`)}</div>
+      <p class="small ${check ? "" : "muted"}">${check ? "✓ Tekshirish: barcha tenglamalarga qo'yilganda to'g'ri tenglik hosil bo'ladi." : ""}</p>`;
+    $("#out", body).innerHTML = html;
+  });
+  build();
+}
+
+// ================= 8. Determinantni hisoblash =================
+function labDet(body) {
+  let n = 3, method = "sarrus", line = "r0";
+  let values = [[2, 1, -1], [3, 0, 4], [1, 5, 2]];
+  body.innerHTML = `
+    <div class="grid split">
+      <div class="card">
+        <h3>Matritsa</h3>
+        <div class="row small">
+          <label>Tartib <select id="n">${sizeOpts([2, 3, 4, 5], n)}</select></label>
+          <label>Usul <select id="meth"></select></label>
+          <label id="lineWrap">Yoyish <select id="line"></select></label>
+        </div>
+        <div id="mat" class="mt" style="overflow-x:auto"></div>
+        <div class="row mt"><button class="btn primary" id="go">Hisoblash</button><button class="btn sm" id="rand">🎲 Tasodifiy</button><button class="btn sm" id="zeros">🎲 Nollari ko'p</button></div>
+        <div class="callout callout-eslatma mt"><div class="callout-title">Qaysi usul qachon?</div><div class="small">${mathText("Sarryus — faqat $3\\times3$. Yoyish — nollari ko'p satr/ustun bo'lsa. Gauss usuli — har qanday tartibda eng tez: uchburchak ko'rinishga keltirib, diagonalni ko'paytiramiz.")}</div></div>
+      </div>
+      <div class="card" id="out"><p class="muted">Usulni tanlang va «Hisoblash» ni bosing.</p></div>
+    </div>`;
+  let read;
+  const methods = () => [
+    ...(n === 2 ? [["formula", "2×2 formula"]] : []),
+    ...(n === 3 ? [["sarrus", "Sarryus (uchburchaklar) qoidasi"]] : []),
+    ["yoyish", "Satr yoki ustun bo'yicha yoyish"],
+    ["gauss", "Gauss usuli (uchburchak ko'rinish)"],
+  ];
+  function syncControls() {
+    const ms = methods();
+    if (!ms.some((m) => m[0] === method)) method = ms[0][0];
+    $("#meth", body).innerHTML = ms.map(([k, t]) => `<option value="${k}" ${k === method ? "selected" : ""}>${t}</option>`).join("");
+    $("#line", body).innerHTML = [...Array.from({ length: n }, (_, i) => [`r${i}`, `${i + 1}-satr`]), ...Array.from({ length: n }, (_, j) => [`c${j}`, `${j + 1}-ustun`])]
+      .map(([k, t]) => `<option value="${k}" ${k === line ? "selected" : ""}>${t}</option>`).join("");
+    $("#lineWrap", body).style.display = method === "yoyish" ? "" : "none";
+  }
+  const build = () => { read = matInput($("#mat", body), n, n, values); syncControls(); };
+  const randM = (zeros) => Array.from({ length: n }, () => Array.from({ length: n }, () => (zeros && Math.random() < 0.45 ? 0 : Math.floor(Math.random() * 9) - 4)));
+  $("#n", body).addEventListener("change", (e) => { n = +e.target.value; values = randM(n > 3); if (!line.endsWith("0")) line = "r0"; build(); });
+  $("#meth", body).addEventListener("change", (e) => { method = e.target.value; syncControls(); });
+  $("#line", body).addEventListener("change", (e) => (line = e.target.value));
+  $("#rand", body).addEventListener("click", () => { values = randM(false); build(); });
+  $("#zeros", body).addEventListener("click", () => { values = randM(true); build(); });
+
+  $("#go", body).addEventListener("click", () => {
+    let A;
+    try { A = read(); } catch (e) { $("#out", body).innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; return; }
+    values = A.map((r) => r.map(String));
+    const D = det(A);
+    let html = "";
+    if (method === "formula") {
+      html = `<h3>2×2 determinant</h3>${mathText(`$$\\begin{vmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{vmatrix} = a_{11}a_{22} - a_{12}a_{21}$$`)}
+        ${mathText(`$$${texMat(A, { br: "v" })} = ${pt(A[0][0])}\\cdot${pt(A[1][1])} - ${pt(A[0][1])}\\cdot${pt(A[1][0])} = ${D.tex()}$$`)}`;
+    } else if (method === "sarrus") {
+      const a = A, P = (i, j, k) => a[0][i].mul(a[1][j]).mul(a[2][k]);
+      const plus = [[0, 1, 2], [1, 2, 0], [2, 0, 1]], minus = [[2, 1, 0], [1, 0, 2], [0, 2, 1]];
+      const term = ([i, j, k]) => `${pt(a[0][i])}\\cdot${pt(a[1][j])}\\cdot${pt(a[2][k])}`;
+      const sp = plus.reduce((s, t) => s.add(P(...t)), F(0)), sm = minus.reduce((s, t) => s.add(P(...t)), F(0));
+      html = `<h3>Sarryus qoidasi</h3>
+        <div class="step"><div class="op">«+» hadlar: bosh diagonal va unga parallel uchburchaklar</div>${mathText(`$$${plus.map(term).join(" + ")} = ${plus.map((t) => P(...t).tex()).join(" + ").replace(/\+ -/g, "- ")} = ${sp.tex()}$$`)}</div>
+        <div class="step"><div class="op">«−» hadlar: yordamchi diagonal va unga parallel uchburchaklar</div>${mathText(`$$${minus.map(term).join(" + ")} = ${minus.map((t) => P(...t).tex()).join(" + ").replace(/\+ -/g, "- ")} = ${sm.tex()}$$`)}</div>
+        ${mathText(`$$\\det A = ${sp.tex()} - ${pt(sm)} = ${D.tex()}$$`)}`;
+    } else if (method === "yoyish") {
+      const isRow = line[0] === "r", idx = +line.slice(1);
+      const zc = (arr) => arr.filter((x) => x.isZero()).length;
+      const best = Array.from({ length: n }, (_, k) => [["r", k, zc(A[k])], ["c", k, zc(A.map((row) => row[k]))]]).flat().sort((p, q) => q[2] - p[2])[0];
+      const elems = Array.from({ length: n }, (_, k) => (isRow ? [idx, k] : [k, idx]));
+      const terms = elems.map(([i, j]) => {
+        const a = A[i][j], s = (i + j) % 2 ? -1 : 1;
+        if (a.isZero()) return { i, j, a, s, zero: true };
+        const mn = minor(A, i, j), md = det(mn);
+        return { i, j, a, s, mn, md, val: a.mul(md).mul(s) };
+      });
+      html = `<h3>${isRow ? `${idx + 1}-satr` : `${idx + 1}-ustun`} bo'yicha yoyish</h3>
+        ${best[2] > 0 && !(best[0] === line[0] && best[1] === idx) ? `<p class="small muted">💡 Maslahat: ${best[0] === "r" ? `${best[1] + 1}-satrda` : `${best[1] + 1}-ustunda`} ${best[2]} ta nol bor — o'sha bo'yicha yoyish qisqaroq.</p>` : ""}
+        ${mathText(`$$\\det A = \\sum ${isRow ? `_{j} a_{${idx + 1}j}A_{${idx + 1}j}` : `_{i} a_{i${idx + 1}}A_{i${idx + 1}}`},\\qquad A_{ij} = (-1)^{i+j}M_{ij}$$`)}
+        ${terms.map((t) => `<div class="step"><div class="op">${mathText(`$a_{${t.i + 1}${t.j + 1}} = ${t.a.tex()}$`)}${t.zero ? " — nol, bu hadni hisoblash shart emas" : ""}</div>${t.zero ? "" : mathText(`$$${t.s < 0 ? "-" : "+"}\\,${pt(t.a)}\\cdot ${t.mn.length === 1 ? pt(t.mn[0][0]) : texMat(t.mn, { br: "v" })} = ${t.s < 0 ? "-" : ""}${pt(t.a)}\\cdot${pt(t.md)} = ${t.val.tex()}$$`)}</div>`).join("")}
+        ${mathText(`$$\\det A = ${terms.filter((t) => !t.zero).map((t) => pt(t.val)).join(" + ") || "0"} = ${D.tex()}$$`)}
+        ${n >= 4 ? `<p class="small muted">${mathText(`$${n - 1}$-tartibli minorlar ham xuddi shunday (yoki Gauss usuli bilan) hisoblanadi.`)}</p>` : ""}`;
+    } else {
+      const res = rrefSteps(A, 0, { jordan: false });
+      html = `<h3>Gauss usuli: uchburchak ko'rinishga keltirish</h3>
+        <p class="small muted">${mathText("Bir satrga boshqasini songa ko'paytirib qo'shish determinantni o'zgartirmaydi; satrlarni almashtirish ishorani o'zgartiradi; satrni songa bo'lsak — o'sha son tashqariga chiqadi.")}</p>
+        ${stepsHtml(res.steps)}
+        <p>${mathText(res.rank < n ? "" : `Uchburchak matritsa determinanti — diagonal elementlar ko'paytmasi${res.swaps ? `; satrlar ${res.swaps} marta almashgani uchun ishora $(-1)^{${res.swaps}}$` : ""}.`)}</p>
+        ${res.rank < n ? `<p>${mathText("Nol satr hosil bo'ldi — satrlar chiziqli bog'liq, $\\det A = 0$.")}</p>` : ""}`;
+    }
+    $("#out", body).innerHTML = html + `<div class="result-banner ok mt">${mathText(`$\\det A = ${D.tex()}$`)}</div>`;
+  });
+  build();
+}
+
+// ================= 9. Matritsa rangi =================
+function labRank(body) {
+  let m = 3, n = 5;
+  let values = [[2, -1, 3, -2, 4], [4, -2, 5, 1, 7], [2, -1, 1, 8, 2]];
+  body.innerHTML = `
+    <div class="grid split">
+      <div class="card">
+        <h3>Matritsa</h3>
+        <div class="row small"><label>Satrlar <select id="m">${sizeOpts([1, 2, 3, 4, 5], m)}</select></label><label>Ustunlar <select id="nn">${sizeOpts([1, 2, 3, 4, 5, 6], n)}</select></label></div>
+        <div id="mat" class="mt" style="overflow-x:auto"></div>
+        <div class="row mt"><button class="btn primary" id="go">Rangni topish</button><button class="btn sm" id="rand">🎲 Tasodifiy</button><button class="btn sm" id="dep">🎲 Bog'liq satrlar bilan</button></div>
+        <div class="callout callout-tarif mt"><div class="callout-title">Ta'rif</div><div class="small">${mathText("$\\operatorname{rang}A$ — noldan farqli minorlarning eng yuqori tartibi = chiziqli erkli satrlarning maksimal soni. Elementar almashtirishlar rangni o'zgartirmaydi.")}</div></div>
+      </div>
+      <div class="card" id="out"><p class="muted">«Rangni topish» tugmasini bosing.</p></div>
+    </div>`;
+  let read;
+  const build = () => { read = matInput($("#mat", body), m, n, values); };
+  const rnd = () => Math.floor(Math.random() * 9) - 4;
+  $("#m", body).addEventListener("change", (e) => { m = +e.target.value; values = Array.from({ length: m }, () => Array.from({ length: n }, rnd)); build(); });
+  $("#nn", body).addEventListener("change", (e) => { n = +e.target.value; values = Array.from({ length: m }, () => Array.from({ length: n }, rnd)); build(); });
+  $("#rand", body).addEventListener("click", () => { values = Array.from({ length: m }, () => Array.from({ length: n }, rnd)); build(); });
+  $("#dep", body).addEventListener("click", () => {
+    const k = Math.max(1, Math.min(m - 1, n, 2));
+    const base = Array.from({ length: k }, () => Array.from({ length: n }, rnd));
+    values = Array.from({ length: m }, (_, i) => (i < k ? base[i] : base.reduce((s, r) => { const c = Math.floor(Math.random() * 5) - 2; return s.map((x, j) => x + c * r[j]); }, Array(n).fill(0))));
+    build();
+  });
+
+  const combos = (arr, k) => (k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map((c) => [x, ...c])));
+
+  $("#go", body).addEventListener("click", () => {
+    let A;
+    try { A = read(); } catch (e) { $("#out", body).innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; return; }
+    values = A.map((r) => r.map(String));
+    const res = rrefSteps(A, 0, { jordan: false });
+    const r = res.rank;
+    let basis = null;
+    if (r > 0) {
+      const cols = res.pivots;
+      for (const rows of combos(Array.from({ length: m }, (_, i) => i), r)) {
+        const sub = rows.map((i) => cols.map((j) => A[i][j]));
+        const d = det(sub);
+        if (!d.isZero()) { basis = { rows, cols, sub, d }; break; }
+      }
+    }
+    $("#out", body).innerHTML = `<h3>Elementar almashtirishlar bilan pog'onasimon ko'rinish</h3>
+      <div class="step"><div class="op">Boshlang'ich matritsa</div>${mathText("$$" + texMat(A) + "$$")}</div>
+      ${stepsHtml(res.steps)}
+      <div class="step"><div class="op">Pog'onasimon ko'rinish: noldan farqli satrlar soni — ${r}</div>${mathText("$$" + texMat(res.R) + "$$")}</div>
+      ${basis ? `<div class="step"><div class="op">Bazis minor (${basis.rows.map((i) => i + 1).join(", ")}-satrlar, ${basis.cols.map((j) => j + 1).join(", ")}-ustunlar) — dastlabki matritsada</div>${mathText(`$$M = ${basis.sub.length === 1 ? `|${basis.sub[0][0].tex()}|` : texMat(basis.sub, { br: "v" })} = ${basis.d.tex()} \\ne 0$$`)}
+        <p class="small muted">${mathText(`Bazis minor teoremasiga ko'ra, $${r + 1}$-tartibli barcha minorlar nolga teng${r < Math.min(m, n) ? "" : " (bunday minorlar yo'q)"}.`)}</p></div>` : ""}
+      <div class="result-banner ok mt">${mathText(`$\\operatorname{rang}A = ${r}$`)}</div>
+      <p class="small">${r < m ? mathText(`Satrlar chiziqli bog'liq: $${m - r}$ ta satr qolganlarining chiziqli kombinatsiyasi.`) : "Barcha satrlar chiziqli erkli."} ${r < n ? mathText(`Ustunlardan $${n - r}$ tasi qolganlari orqali ifodalanadi.`) : ""}</p>`;
   });
   build();
 }

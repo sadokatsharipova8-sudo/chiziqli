@@ -1,14 +1,16 @@
 // 60 soniyalik sprint: tezkor hisob-kitob (avtomatlashtirish — fluency).
 
 import { GENERATORS } from "../generators.js";
+import { topicPicker } from "../course.js";
 import { makeRng, parseNum, sameNum } from "../math.js";
 import { store, addXP, setBest } from "../store.js";
-import { $, mathText, sound, confetti } from "../ui.js";
+import { $, mathText, sound, confetti, toast } from "../ui.js";
 
-const POOL = GENERATORS.filter((g) => g.quick && g.gen(makeRng(1)).answer.type === "num");
+const ALL = GENERATORS.filter((g) => g.quick && g.gen(makeRng(1)).answer.type === "num");
+const SPRINT_TOPICS = [...new Set(ALL.map((g) => g.topic))];
 
 export function render(el) {
-  let timer = null;
+  let timer = null, picker = null, POOL = ALL;
 
   function intro() {
     const best = store.get().best.sprint || 0;
@@ -16,10 +18,20 @@ export function render(el) {
       <div class="page-head"><h1>⚡ 60 soniya sprint</h1><p>Bir daqiqada imkon qadar ko'p misol yeching. Javobni yozib <b>Enter</b> bosing. Xato bo'lsa — to'g'ri javob ko'rsatiladi va keyingisiga o'tiladi.</p></div>
       <div class="card center" style="max-width:560px;margin:0 auto">
         <div class="muted">Shaxsiy rekord</div><div class="k-big">🏅 ${best}</div>
-        <p class="muted small">Misollar: ${POOL.map((g) => g.title).join(", ")}</p>
+        <div class="mt" style="text-align:left"><div class="small muted mb">Qaysi mavzulardan misollar tushsin:</div><div id="tp"></div></div>
+        <p class="muted small mt" id="kinds"></p>
         <button class="btn primary lg" id="go">▶ Boshlash</button>
       </div>`;
-    $("#go", el).addEventListener("click", start);
+    const kinds = (ids) => {
+      const list = ALL.filter((g) => ids.includes(g.topic));
+      $("#kinds", el).textContent = list.length ? "Misollar: " + list.map((g) => g.title).join(", ") : "Tezkor misollari bor mavzuni tanlang.";
+    };
+    topicPicker($("#tp", el), { key: "sprint", only: SPRINT_TOPICS, onChange: kinds }).then((p) => { picker = p; kinds(p.get()); });
+    $("#go", el).addEventListener("click", () => {
+      POOL = ALL.filter((g) => (picker ? picker.get() : []).includes(g.topic));
+      if (!POOL.length) return toast("Kamida bitta mavzu tanlang");
+      start();
+    });
   }
 
   function start() {
@@ -74,6 +86,8 @@ export function render(el) {
         <div class="row" style="justify-content:center"><button class="btn primary lg" id="again">↻ Yana</button><a class="btn lg" href="#/oyinlar">O'yinlar</a></div>
       </div>`;
     $("#again", el).addEventListener("click", start);
+    el.querySelector(".row").insertAdjacentHTML("beforeend", `<button class="btn lg" id="topics">Mavzular</button>`);
+    $("#topics", el).addEventListener("click", intro);
   }
 
   intro();

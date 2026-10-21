@@ -9,7 +9,7 @@ Qurish (build) bosqichi yo'q — oddiy HTML/CSS/JS. Jonli viktorina uchun Cloudf
 |---|---|---|
 | 📘 Darslik | Fan dasturidagi 18 mavzu (I qism — chiziqli algebra, II qism — analitik geometriya), Ivleva (2014) va Karchevskiy (2012) darsliklari asosida; Markdown boblar, LaTeX formulalar, ichki «O'zingizni tekshiring» savollari, PDF ko'rinish | Retrieval practice, flipped classroom |
 | 🎞 Taqdimotlar | Har bir mavzu bo'yicha 30+ slaydli ma'ruza taqdimoti (jami 566 slayd): ta'riflar, qadamma-qadam misollar, interaktiv savollar; to'liq ekran, ← → tugmalari, telefonda surish. Fayllar: `public/content/taqdimotlar/NN.md`, slaydlar `---` qatori bilan ajratiladi | Ma'ruza + faol o'qitish |
-| 🔬 Laboratoriya | Chiziqli almashtirish (3Blue1Brown uslubi), 2D/3D vektorlar, konus kesimlari, Gauss usuli va matritsa kalkulyatori — qadamma-qadam | Vizual intuitsiya (MIT 18.06) |
+| 🔬 Laboratoriya | Chiziqli almashtirish (3Blue1Brown uslubi), 2D/3D vektorlar, konus kesimlari; sistemalarni Gauss, matritsaviy usul va Kramer qoidasi bilan yechish; determinantni Sarryus, yoyish va Gauss usullarida hisoblash; matritsa rangi va bazis minor; matritsa kalkulyatori — hammasi qadamma-qadam | Vizual intuitsiya (MIT 18.06) |
 | 🎯 Mashqlar | 18 mavzu bo'yicha 44 xil masala generatori, cheksiz yangi masalalar, maslahatlar, to'liq yechim, mavzu bo'yicha o'zlashtirish darajasi | Mastery learning, worked examples, interleaving |
 | 🔁 Takrorlash | Leitner qutilari (1-3-7-16-35 kun) | Spaced repetition |
 | 📝 Mustaqil ish | 4 ta hisob-grafik ish, oraliq va yakuniy nazorat; har talabaga shaxsiy variant, avtomatik tekshirish, tasdiqlash kodi | Individual variantlar (WeBWorK) |
@@ -38,6 +38,8 @@ XP, darajalar, kunlik seriya va 16 ta nishon — har bir talabaning brauzerida s
 > O'z domeningizni ulash: Worker → **Settings → Domains & Routes → Add custom domain**.
 
 ### O'qituvchi paroli
+
+**O'tilgan mavzular:** O'qituvchi paneli → **📅 O'tilgan mavzular** — o'yinlar va takrorlashda faqat shu mavzugacha savollar chiqadi (sozlama serverda, barcha talabalar uchun). Har bir o'yinda mavzularni alohida tanlash mumkin.
 
 Saytga faqat login va parol bilan kiriladi. O'qituvchi paneli (javob kalitlari, bosma variantlar, talabalar hisoblari) va jonli viktorina xonasini yaratish faqat o'qituvchiga ochiq. Jonli viktorinaga telefondan PIN orqali qo'shilish uchun kirish shart emas.
 

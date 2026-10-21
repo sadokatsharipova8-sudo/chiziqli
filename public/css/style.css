@@ -1,4 +1,4 @@
-/* ===== Tokenlar ===== */
+﻿/* ===== Tokenlar ===== */
 :root {
   --bg: #f6f7fb;
   --bg2: #eef0f7;
@@ -438,3 +438,17 @@ body.auth-mode main { max-width: none; }
 .deck:fullscreen .slide-frame { aspect-ratio: auto; max-height: none; flex: 1; }
 .deck:fullscreen .slide { font-size: clamp(18px, 2.1vw, 40px); max-width: 1500px; }
 @media (max-width: 700px) { .slide-frame { aspect-ratio: auto; min-height: 60vh; } .slide { font-size: 16px; } }
+
+/* ===== Laboratoriya: algebraik to'ldiruvchilar jadvali ===== */
+.cof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 14px; margin-top: 8px; overflow-x: auto; }
+.cof-grid > div { overflow: visible; }
+
+/* ===== Mavzu tanlash (o'yinlar) ===== */
+.topic-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.topic-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; background: var(--card); user-select: none; }
+.topic-chip input { margin: 0; }
+.topic-chip b { color: var(--muted); font-variant-numeric: tabular-nums; }
+.topic-chip.on { border-color: var(--primary); background: var(--primary-soft); }
+.topic-chip.on b { color: var(--primary); }
+.topic-chip.closed { opacity: .55; }
+.topic-chip.closed:has(input:disabled) { cursor: not-allowed; }
