@@ -416,3 +416,25 @@ body.auth-mode main { max-width: none; }
 .cred-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px; break-inside: avoid; }
 .cred-card .mono { font-size: 15px; font-weight: 600; }
 @media print { .cred-grid { grid-template-columns: repeat(3, 1fr); } .cred-card { border-color: #999; } }
+
+/* ===== Taqdimotlar ===== */
+.deck-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.deck-title { flex: 1; min-width: 200px; }
+.deck { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); outline: none; overflow: hidden; }
+.slide-frame { aspect-ratio: 16 / 9; max-height: calc(100vh - 210px); min-height: 360px; overflow-y: auto; display: flex; }
+.slide { margin: auto; width: 100%; max-width: none; padding: clamp(18px, 4%, 56px) clamp(18px, 6%, 80px); font-size: clamp(16px, 1.55vw, 24px); line-height: 1.55; }
+.slide h1 { font-size: 1.9em; margin: 0 0 .5em; }
+.slide h2 { font-size: 1.45em; margin: 0 0 .6em; color: var(--primary); border-bottom: 2px solid var(--primary-soft); padding-bottom: .25em; }
+.slide h3 { font-size: 1.15em; }
+.slide .katex-display { margin: .6em 0; }
+.slide.title-slide { text-align: center; }
+.slide.title-slide h1 { font-size: 2.3em; color: var(--primary); }
+.deck-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--bg2); }
+.deck-bar select { flex: 1; min-width: 0; }
+.deck-count { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; white-space: nowrap; }
+.deck-progress { height: 4px; background: var(--line); }
+.deck-progress i { display: block; height: 100%; background: var(--primary); transition: width .2s; }
+.deck:fullscreen { border-radius: 0; border: 0; }
+.deck:fullscreen .slide-frame { aspect-ratio: auto; max-height: none; flex: 1; }
+.deck:fullscreen .slide { font-size: clamp(18px, 2.1vw, 40px); max-width: 1500px; }
+@media (max-width: 700px) { .slide-frame { aspect-ratio: auto; min-height: 60vh; } .slide { font-size: 16px; } }

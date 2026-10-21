@@ -93,6 +93,7 @@ export async function render(el, params) {
       <p class="muted">Bilimni mustahkamlash uchun keyingi qadam — mavzu bo'yicha mashq.</p>
       <div class="row">
         <button class="btn ${s.read[bob.id] ? "" : "primary"}" id="mark-read">${s.read[bob.id] ? "✓ O'qilgan" : "✓ O'qidim (+30 XP)"}</button>
+        <a class="btn" href="#/taqdimot/${bob.id}">🎞 Taqdimot</a>
         ${t ? `<a class="btn" href="#/mashq/${t.id}">🎯 «${esc(t.name)}» bo'yicha mashq</a>` : ""}
       </div>
     </div>

@@ -8,6 +8,7 @@ Qurish (build) bosqichi yo'q — oddiy HTML/CSS/JS. Jonli viktorina uchun Cloudf
 | Bo'lim | Nima qiladi | Metodika |
 |---|---|---|
 | 📘 Darslik | Fan dasturidagi 18 mavzu (I qism — chiziqli algebra, II qism — analitik geometriya), Ivleva (2014) va Karchevskiy (2012) darsliklari asosida; Markdown boblar, LaTeX formulalar, ichki «O'zingizni tekshiring» savollari, PDF ko'rinish | Retrieval practice, flipped classroom |
+| 🎞 Taqdimotlar | Har bir mavzu bo'yicha 30+ slaydli ma'ruza taqdimoti (jami 566 slayd): ta'riflar, qadamma-qadam misollar, interaktiv savollar; to'liq ekran, ← → tugmalari, telefonda surish. Fayllar: `public/content/taqdimotlar/NN.md`, slaydlar `---` qatori bilan ajratiladi | Ma'ruza + faol o'qitish |
 | 🔬 Laboratoriya | Chiziqli almashtirish (3Blue1Brown uslubi), 2D/3D vektorlar, konus kesimlari, Gauss usuli va matritsa kalkulyatori — qadamma-qadam | Vizual intuitsiya (MIT 18.06) |
 | 🎯 Mashqlar | 18 mavzu bo'yicha 44 xil masala generatori, cheksiz yangi masalalar, maslahatlar, to'liq yechim, mavzu bo'yicha o'zlashtirish darajasi | Mastery learning, worked examples, interleaving |
 | 🔁 Takrorlash | Leitner qutilari (1-3-7-16-35 kun) | Spaced repetition |
