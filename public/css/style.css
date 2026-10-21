@@ -410,3 +410,9 @@ body.auth-mode main { max-width: none; }
 .login-tabs .tab { flex: 1; text-align: center; }
 .login-card input { width: 100%; }
 .login-card label { margin-bottom: -6px; }
+
+/* ===== Talabalar loginlari (chop etish uchun kartochkalar) ===== */
+.cred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
+.cred-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px; break-inside: avoid; }
+.cred-card .mono { font-size: 15px; font-weight: 600; }
+@media print { .cred-grid { grid-template-columns: repeat(3, 1fr); } .cred-card { border-color: #999; } }

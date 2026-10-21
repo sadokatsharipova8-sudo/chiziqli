@@ -1,6 +1,6 @@
 import { store, levelInfo, BADGES, LEVELS, LEVEL_NAMES } from "../store.js";
 import { $, esc, toast, download } from "../ui.js";
-import { looksTeacher, logoutTeacher, logoutAll } from "../auth.js";
+import { looksTeacher, logoutTeacher, logoutAll, hasStudentAccount } from "../auth.js";
 
 export function render(el) {
   const s = store.get(), L = levelInfo();
@@ -8,7 +8,9 @@ export function render(el) {
     <div class="page-head"><h1>👤 Profil</h1></div>
     <div class="grid g2">
       <div class="card">
-        <div class="row"><input id="nm" placeholder="Familiya Ism" value="${esc(s.profile.name)}" style="flex:2"><input id="gr" placeholder="Guruh" value="${esc(s.profile.group)}" style="flex:1"><button class="btn primary" id="save">Saqlash</button></div>
+        ${hasStudentAccount()
+          ? `<h3 style="margin:0">${esc(s.profile.name)}</h3><p class="muted small" style="margin:4px 0 0">Guruh: ${esc(s.profile.group)} · Ism va guruhni o'qituvchi belgilaydi</p>`
+          : `<div class="row"><input id="nm" placeholder="Familiya Ism" value="${esc(s.profile.name)}" style="flex:2"><input id="gr" placeholder="Guruh" value="${esc(s.profile.group)}" style="flex:1"><button class="btn primary" id="save">Saqlash</button></div>`}
         <div class="grid g3 mt">
           <div class="stat"><b>${s.xp}</b><span>XP</span></div>
           <div class="stat"><b>${L.level}</b><span>${esc(L.name)}</span></div>
@@ -39,7 +41,7 @@ export function render(el) {
       <p class="small muted">Progress faqat shu brauzerda saqlanadi. Boshqa qurilmaga ko'chirish uchun eksport/import qiling.</p>
       <div class="row"><button class="btn" id="exp">⬇️ Eksport</button><label class="btn">⬆️ Import<input type="file" id="imp" accept=".json" hidden></label><button class="btn danger" id="reset">Hammasini o'chirish</button></div>
     </div>`;
-  $("#save", el).addEventListener("click", () => { s.profile.name = $("#nm", el).value.trim(); s.profile.group = $("#gr", el).value.trim(); store.save(); toast("Saqlandi ✓"); });
+  $("#save", el)?.addEventListener("click", () => { s.profile.name = $("#nm", el).value.trim(); s.profile.group = $("#gr", el).value.trim(); store.save(); toast("Saqlandi ✓"); });
   $("#out-t", el)?.addEventListener("click", () => { logoutTeacher(); store.save(); toast("O'qituvchi hisobidan chiqdingiz"); render(el); });
   $("#out-all", el).addEventListener("click", () => { logoutAll(); location.hash = "#/kirish"; });
   $("#exp", el).addEventListener("click", () => download("chiziqli-algebra-progress.json", store.export(), "application/json"));

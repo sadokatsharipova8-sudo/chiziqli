@@ -3,6 +3,9 @@
 //
 //   POST /api/teacher/login        -> { password } => { token } (o'qituvchi kirishi)
 //   POST /api/teacher/check        -> { token } => { ok }
+//   POST /api/student/login        -> { login, password } => { token, name, group } (talaba kirishi)
+//   POST /api/student/check        -> { token } => { ok, name, group }
+//   POST /api/students/list|create|reset|delete -> talabalar hisoblari (faqat o'qituvchi tokeni bilan)
 //   POST /api/room                 -> yangi xona: { pin, hostKey } (faqat o'qituvchi tokeni bilan)
 //   GET  /api/room/:pin/info       -> xona holati
 //   GET  /api/room/:pin/ws         -> WebSocket (role=host&key=... yoki role=player&name=...&pid=...)
@@ -67,6 +70,26 @@ export default {
     if (url.pathname === "/api/teacher/check" && request.method === "POST") {
       const { token } = await readJson(request);
       return json({ ok: await checkToken(env, token) });
+    }
+
+    // ---- Talabalar hisoblari ----
+    if (url.pathname.startsWith("/api/student") && request.method === "POST") {
+      const acc = env.ACCOUNTS.get(env.ACCOUNTS.idFromName("main"));
+      const body = await readJson(request);
+      if (url.pathname === "/api/student/login") {
+        const r = await acc.login(String(body.login ?? ""), String(body.password ?? ""));
+        if (!r.ok) await new Promise((res) => setTimeout(res, 600));
+        return json(r, r.ok ? 200 : r.status || 401);
+      }
+      if (url.pathname === "/api/student/check") return json(await acc.check(String(body.token ?? "")));
+
+      // Quyidagilar faqat o'qituvchi uchun
+      if (!(await checkToken(env, request.headers.get("x-teacher-token")))) return json({ error: "Faqat o'qituvchi uchun" }, 401);
+      if (url.pathname === "/api/students/list") return json(await acc.list());
+      if (url.pathname === "/api/students/create") return json(await acc.create(String(body.group ?? ""), Array.isArray(body.names) ? body.names : []));
+      if (url.pathname === "/api/students/reset") return json(await acc.reset(String(body.login ?? "")));
+      if (url.pathname === "/api/students/delete") return json(await acc.remove(body.login ? String(body.login) : null, body.group ? String(body.group) : null));
+      return json({ error: "Topilmadi" }, 404);
     }
 
     if (url.pathname === "/api/room" && request.method === "POST") {
@@ -444,5 +467,121 @@ export class QuizRoom extends DurableObject {
     const answered = Object.keys(s.answers).length;
     const all = [...online].every((id) => s.answers[id]);
     for (const h of this.sockets("host")) this.send(h, { t: "answered", answered, online: online.size, all });
+  }
+}
+
+// ===================== Talabalar hisoblari =====================
+// Bitta "main" nusxa, SQLite jadvali. Parollar server tomonidan tasodifiy yaratiladi va faqat
+// tuz + HMAC-SHA256 ko'rinishida saqlanadi (ochiq matn saqlanmaydi).
+
+const PW_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+const STUDENT_TTL = 120 * 24 * 3600 * 1000; // 120 kun (semestr)
+const MAX_FAILS = 10, LOCK_MS = 15 * 60 * 1000;
+
+const randStr = (n, abc = PW_ALPHABET) => {
+  const b = crypto.getRandomValues(new Uint8Array(n));
+  return [...b].map((x) => abc[x % abc.length]).join("");
+};
+const hexOf = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
+async function hmacHex(key, data) {
+  const k = await crypto.subtle.importKey("raw", enc.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return hexOf(await crypto.subtle.sign("HMAC", k, enc.encode(data)));
+}
+
+const TR = { а:"a",б:"b",в:"v",г:"g",ғ:"g",д:"d",е:"e",ё:"yo",ж:"j",з:"z",и:"i",й:"y",к:"k",қ:"q",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ў:"o",ф:"f",х:"x",ҳ:"h",ц:"s",ч:"ch",ш:"sh",щ:"sh",ъ:"",ы:"i",ь:"",э:"e",ю:"yu",я:"ya" };
+const slug = (s) => [...String(s).toLowerCase()].map((c) => TR[c] ?? c).join("").replace(/[^a-z0-9]/g, "");
+
+export class Accounts extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.sql = ctx.storage.sql;
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS students (
+      login TEXT PRIMARY KEY, name TEXT NOT NULL, grp TEXT NOT NULL,
+      salt TEXT NOT NULL, hash TEXT NOT NULL, ver INTEGER NOT NULL DEFAULT 1,
+      created INTEGER NOT NULL, last_login INTEGER, fails INTEGER NOT NULL DEFAULT 0, lock_until INTEGER NOT NULL DEFAULT 0)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`);
+    const row = this.sql.exec(`SELECT v FROM meta WHERE k = 'secret'`).toArray()[0];
+    this.secret = row?.v;
+    if (!this.secret) {
+      this.secret = randStr(48, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+      this.sql.exec(`INSERT INTO meta (k, v) VALUES ('secret', ?)`, this.secret);
+    }
+  }
+
+  row(login) {
+    return this.sql.exec(`SELECT * FROM students WHERE login = ?`, login).toArray()[0];
+  }
+
+  async newPassword() {
+    const password = randStr(8), salt = randStr(16);
+    return { password, salt, hash: await hmacHex(salt, password) };
+  }
+
+  async token(r) {
+    const payload = btoa(JSON.stringify({ l: r.login, v: r.ver, e: Date.now() + STUDENT_TTL })).replace(/=+$/, "");
+    return payload + "." + (await hmacHex(this.secret, payload));
+  }
+
+  // ---- RPC ----
+  async login(login, password) {
+    login = login.trim().toLowerCase();
+    const r = this.row(login);
+    if (!r) return { ok: false, error: "Login yoki parol noto'g'ri" };
+    if (r.lock_until > Date.now()) return { ok: false, status: 429, error: "Juda ko'p noto'g'ri urinish. 15 daqiqadan so'ng qayta urinib ko'ring" };
+    if (!(await safeEqual(await hmacHex(r.salt, password.trim()), r.hash))) {
+      const fails = r.fails + 1;
+      this.sql.exec(`UPDATE students SET fails = ?, lock_until = ? WHERE login = ?`, fails >= MAX_FAILS ? 0 : fails, fails >= MAX_FAILS ? Date.now() + LOCK_MS : 0, login);
+      return { ok: false, error: "Login yoki parol noto'g'ri" };
+    }
+    this.sql.exec(`UPDATE students SET fails = 0, lock_until = 0, last_login = ? WHERE login = ?`, Date.now(), login);
+    return { ok: true, token: await this.token(r), login: r.login, name: r.name, group: r.grp };
+  }
+
+  async check(token) {
+    const [payload, sig] = String(token).split(".");
+    if (!payload || !sig || !(await safeEqual(sig, await hmacHex(this.secret, payload)))) return { ok: false };
+    let p;
+    try { p = JSON.parse(atob(payload)); } catch { return { ok: false }; }
+    const r = this.row(p.l);
+    if (!r || r.ver !== p.v || !(p.e > Date.now())) return { ok: false };
+    return { ok: true, login: r.login, name: r.name, group: r.grp };
+  }
+
+  async list() {
+    return this.sql.exec(`SELECT login, name, grp AS "group", created, last_login AS lastLogin FROM students ORDER BY grp, name`).toArray();
+  }
+
+  async create(group, names) {
+    group = clean(group, 20);
+    if (!group) return { error: "Guruhni kiriting" };
+    const out = [];
+    for (const raw of names.slice(0, 300)) {
+      const name = clean(raw, 60).replace(/\s+/g, " ");
+      if (!name) continue;
+      const exist = this.sql.exec(`SELECT login FROM students WHERE name = ? AND grp = ?`, name, group).toArray()[0];
+      if (exist) { out.push({ name, group, login: exist.login, existed: true }); continue; }
+      const [fam, ism = ""] = name.split(" ");
+      const base = (slug(fam) || "talaba") + (slug(ism)[0] ? "." + slug(ism)[0] : "");
+      let login = base, i = 2;
+      while (this.row(login)) login = base + i++;
+      const { password, salt, hash } = await this.newPassword();
+      this.sql.exec(`INSERT INTO students (login, name, grp, salt, hash, created) VALUES (?, ?, ?, ?, ?, ?)`, login, name, group, salt, hash, Date.now());
+      out.push({ name, group, login, password });
+    }
+    return { ok: true, students: out };
+  }
+
+  async reset(login) {
+    const r = this.row(login);
+    if (!r) return { error: "Bunday login yo'q" };
+    const { password, salt, hash } = await this.newPassword();
+    this.sql.exec(`UPDATE students SET salt = ?, hash = ?, ver = ver + 1, fails = 0, lock_until = 0 WHERE login = ?`, salt, hash, login);
+    return { ok: true, login, name: r.name, group: r.grp, password };
+  }
+
+  async remove(login, group) {
+    if (login) this.sql.exec(`DELETE FROM students WHERE login = ?`, login);
+    else if (group) this.sql.exec(`DELETE FROM students WHERE grp = ?`, group);
+    return { ok: true };
   }
 }

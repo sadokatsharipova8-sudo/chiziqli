@@ -38,7 +38,9 @@ XP, darajalar, kunlik seriya va 16 ta nishon — har bir talabaning brauzerida s
 
 ### O'qituvchi paroli
 
-Saytga kirishda talaba F.I.Sh. va guruhini yozadi, o'qituvchi esa parol bilan kiradi. O'qituvchi paneli (javob kalitlari, bosma variantlar) va jonli viktorina xonasini yaratish faqat o'qituvchiga ochiq.
+Saytga faqat login va parol bilan kiriladi. O'qituvchi paneli (javob kalitlari, bosma variantlar, talabalar hisoblari) va jonli viktorina xonasini yaratish faqat o'qituvchiga ochiq. Jonli viktorinaga telefondan PIN orqali qo'shilish uchun kirish shart emas.
+
+**Talabalar hisoblari:** O'qituvchi paneli → **👥 Talabalar** → guruh va talabalar ro'yxatini joylang → har biriga login va parol yaratiladi (chop etish yoki CSV). Hisoblar Cloudflare'da (Durable Object, SQLite) saqlanadi; parollar faqat xesh ko'rinishida. Parolni unutgan talabaga «🔑 Yangi parol» bering.
 
 Parol kodda saqlanmaydi. Uni Cloudflare'da o'rnating:
 **Workers & Pages → chiziqli → Settings → Variables and Secrets → Add** → Type: **Secret**, Name: `TEACHER_PASSWORD`, Value: parolingiz → **Deploy**.

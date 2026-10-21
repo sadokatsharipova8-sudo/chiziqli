@@ -4,6 +4,7 @@ import { MUSTAQIL, TUZ } from "../../content/mustaqil.js";
 import { genById } from "../generators.js";
 import { makeRng, hashStr } from "../math.js";
 import { store, addXP, setBest } from "../store.js";
+import { hasStudentAccount } from "../auth.js";
 import { mathText, answerInputs, checkInputs, answerTex, $, $$, esc, toast, modal, confetti, fmtTime } from "../ui.js";
 
 export const norm = (s) => String(s || "").toLowerCase().replace(/[ʻʼ'`’‘]/g, "").replace(/\s+/g, " ").trim();
@@ -37,6 +38,9 @@ export function render(el, params) {
 }
 
 function profileForm(s) {
+  if (hasStudentAccount() && s.profile.name) return `<div class="card mb">
+    <h3>👤 ${esc(s.profile.name)} · ${esc(s.profile.group)}</h3>
+    <p class="small muted" style="margin:0">Variant hisobingizdagi F.I.Sh. va guruh asosida tuziladi. Xato bo'lsa — o'qituvchiga murojaat qiling.</p></div>`;
   return `<div class="card mb">
     <h3>👤 Talaba ma'lumotlari</h3>
     <p class="small muted">Variant aynan shu ma'lumotlar asosida tuziladi — o'qituvchiga beradigan F.I.Sh. va guruhingizni aniq yozing.</p>
@@ -67,7 +71,7 @@ function renderList(el) {
         </div>`;
       }).join("")}
     </div>`;
-  $("#pf-save", el).addEventListener("click", () => {
+  $("#pf-save", el)?.addEventListener("click", () => {
     const st = store.get();
     st.profile.name = $("#pf-name", el).value.trim();
     st.profile.group = $("#pf-group", el).value.trim();

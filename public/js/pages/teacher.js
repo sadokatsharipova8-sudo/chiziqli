@@ -5,17 +5,145 @@ import { SAVOLLAR } from "../../content/savollar.js";
 import { TOPICS, GENERATORS } from "../generators.js";
 import { buildVariant, verifyCode } from "./mustaqil.js";
 import { renderChapter } from "./darslik.js";
-import { $, $$, esc, mathText, answerTex, download } from "../ui.js";
+import { $, $$, esc, mathText, answerTex, download, toast } from "../ui.js";
+import { teacherApi } from "../auth.js";
 
-const TABS = [["tekshirish", "✅ Natijalarni tekshirish"], ["kalit", "🔑 Variant kaliti"], ["bosma", "🖨 Bosma variantlar"], ["kontent", "📚 Darslik qo'shish"], ["bank", "❓ Savollar banki"]];
+const TABS = [["talabalar", "👥 Talabalar"], ["tekshirish", "✅ Natijalarni tekshirish"], ["kalit", "🔑 Variant kaliti"], ["bosma", "🖨 Bosma variantlar"], ["kontent", "📚 Darslik qo'shish"], ["bank", "❓ Savollar banki"]];
 
 export function render(el, params) {
-  const tab = TABS.some((t) => t[0] === params[0]) ? params[0] : "tekshirish";
+  const tab = TABS.some((t) => t[0] === params[0]) ? params[0] : "talabalar";
   el.innerHTML = `
     <div class="page-head no-print"><h1>👩‍🏫 O'qituvchi paneli</h1><p>Mustaqil ishlarni tekshirish, kalitlar, bosma variantlar va o'z darsligingizni platformaga joylash.</p></div>
     <div class="tabs no-print">${TABS.map(([id, n]) => `<a class="tab ${id === tab ? "active" : ""}" href="#/oqituvchi/${id}">${n}</a>`).join("")}</div>
     <div id="tbody"></div>`;
-  ({ tekshirish, kalit, bosma, kontent, bank })[tab]($("#tbody", el));
+  ({ talabalar, tekshirish, kalit, bosma, kontent, bank })[tab]($("#tbody", el));
+}
+
+// ---------------- Talabalar hisoblari ----------------
+const csvCell = (x) => `"${String(x ?? "").replace(/"/g, '""')}"`;
+const fmtDate = (t) => (t ? new Date(t).toLocaleString("uz-UZ", { dateStyle: "short", timeStyle: "short" }) : "—");
+
+function credCards(list) {
+  const site = location.host;
+  return `<div class="cred-grid">${list.map((s) => `
+    <div class="cred-card">
+      <b>${esc(s.name)}</b><span class="muted small">${esc(s.group)}</span>
+      <div class="small">Sayt: <span class="mono">${esc(site)}</span></div>
+      <div>Login: <span class="mono">${esc(s.login)}</span></div>
+      <div>Parol: <span class="mono">${esc(s.password)}</span></div>
+    </div>`).join("")}</div>`;
+}
+
+function talabalar(box) {
+  box.innerHTML = `
+    <div class="grid g2 no-print">
+      <div class="card">
+        <h3>➕ Hisob yaratish</h3>
+        <p class="small muted">Guruhni yozing va talabalar ro'yxatini joylang (har qatorda bitta: <b>Familiya Ism</b>). Har biriga login va parol avtomatik yaratiladi.</p>
+        <div class="stack">
+          <input id="cg" placeholder="Guruh (masalan, 101-26)" maxlength="20">
+          <textarea id="cn" placeholder="Aliyev Vali&#10;Karimova Malika&#10;..."></textarea>
+          <button class="btn primary" id="create">Hisoblarni yaratish</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ℹ️ Qanday ishlaydi</h3>
+        <ol class="small" style="padding-left:18px;margin:0">
+          <li>Hisob yaratilgach parollar <b>faqat bir marta</b> ko'rsatiladi — darhol chop eting yoki CSV yuklab oling.</li>
+          <li>Talaba saytga login va parol bilan kiradi; F.I.Sh. va guruh hisobdan olinadi, ularni o'zgartira olmaydi.</li>
+          <li>Parolni unutgan talabaga ro'yxatdan «🔑 Yangi parol» bering — eski parol va kirgan qurilmalari bekor bo'ladi.</li>
+          <li>Ro'yxatda allaqachon bor talaba qayta qo'shilmaydi.</li>
+        </ol>
+      </div>
+    </div>
+    <div id="created"></div>
+    <div class="card mt no-print">
+      <div class="row between"><h3 style="margin:0">📋 Talabalar ro'yxati</h3>
+        <div class="row"><select id="fg"><option value="">Barcha guruhlar</option></select><button class="btn sm" id="reload">↻ Yangilash</button></div></div>
+      <div id="list" class="mt"><p class="muted">Yuklanmoqda…</p></div>
+    </div>`;
+
+  const showCreated = (rows, title) => {
+    const fresh = rows.filter((r) => r.password);
+    const skipped = rows.filter((r) => r.existed);
+    if (!fresh.length) {
+      $("#created", box).innerHTML = `<div class="card mt no-print"><p class="muted" style="margin:0">Yangi hisob yaratilmadi${skipped.length ? `: ${skipped.length} ta talaba allaqachon ro'yxatda bor` : ""}.</p></div>`;
+      return;
+    }
+    $("#created", box).innerHTML = `
+      <div class="card mt">
+        <div class="row between no-print"><h3 style="margin:0">🔐 ${esc(title)}</h3>
+          <div class="row"><button class="btn primary sm" id="pr">🖨 Chop etish</button><button class="btn sm" id="dl">⬇️ CSV</button></div></div>
+        <p class="small no-print" style="color:var(--bad)">Parollar faqat hozir ko'rinadi — sahifadan chiqishdan oldin chop eting yoki saqlang.${skipped.length ? ` ${skipped.length} ta talaba ro'yxatda allaqachon bor edi va qayta yaratilmadi.` : ""}</p>
+        ${credCards(fresh)}
+      </div>`;
+    $("#pr", box).addEventListener("click", () => window.print());
+    $("#dl", box).addEventListener("click", () => download(`loginlar-${fresh[0].group}.csv`, "﻿F.I.Sh.;Guruh;Login;Parol;Sayt\n" + fresh.map((r) => [r.name, r.group, r.login, r.password, location.host].map(csvCell).join(";")).join("\n"), "text/csv"));
+  };
+
+  let all = [];
+  const paint = () => {
+    const g = $("#fg", box).value;
+    const rows = all.filter((r) => !g || r.group === g);
+    $("#list", box).innerHTML = rows.length
+      ? `<table class="tbl"><thead><tr><th>#</th><th>F.I.Sh.</th><th>Guruh</th><th>Login</th><th>Oxirgi kirish</th><th></th></tr></thead><tbody>
+        ${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.group)}</td><td class="mono">${esc(r.login)}</td><td class="small">${fmtDate(r.lastLogin)}</td>
+          <td class="row" style="flex-wrap:nowrap"><button class="btn sm" data-reset="${esc(r.login)}">🔑 Yangi parol</button><button class="btn sm danger" data-del="${esc(r.login)}" title="O'chirish">🗑</button></td></tr>`).join("")}
+        </tbody></table>
+        ${g ? `<div class="row mt"><button class="btn sm danger" id="delg">🗑 «${esc(g)}» guruhini butunlay o'chirish</button></div>` : ""}`
+      : `<p class="muted">Hali hisob yo'q. Yuqorida guruh ro'yxatini joylab, hisob yarating.</p>`;
+    $("#delg", box)?.addEventListener("click", async () => {
+      if (!confirm(`«${g}» guruhidagi barcha ${rows.length} ta hisob o'chiriladi. Davom etasizmi?`)) return;
+      try { await teacherApi("delete", { group: g }); toast("Guruh o'chirildi"); load(); } catch (e) { toast(esc(e.message)); }
+    });
+  };
+  const load = async () => {
+    try {
+      all = await teacherApi("list");
+      const groups = [...new Set(all.map((r) => r.group))];
+      const cur = $("#fg", box).value;
+      $("#fg", box).innerHTML = `<option value="">Barcha guruhlar (${all.length})</option>` + groups.map((g) => `<option ${g === cur ? "selected" : ""}>${esc(g)}</option>`).join("");
+      paint();
+    } catch (e) {
+      $("#list", box).innerHTML = `<div class="result-banner bad">${esc(e.message)}</div>`;
+    }
+  };
+
+  $("#fg", box).addEventListener("change", paint);
+  $("#reload", box).addEventListener("click", load);
+  $("#list", box).addEventListener("click", async (e) => {
+    const rs = e.target.closest("[data-reset]")?.dataset.reset, dl = e.target.closest("[data-del]")?.dataset.del;
+    try {
+      if (rs) {
+        if (!confirm(`${rs} uchun yangi parol yaratilsinmi? Eski parol ishlamay qoladi.`)) return;
+        const r = await teacherApi("reset", { login: rs });
+        showCreated([r], "Yangi parol");
+        $("#created", box).scrollIntoView({ behavior: "smooth" });
+      } else if (dl) {
+        if (!confirm(`${dl} hisobi o'chirilsinmi?`)) return;
+        await teacherApi("delete", { login: dl });
+        toast("O'chirildi");
+        load();
+      }
+    } catch (err) { toast(esc(err.message)); }
+  });
+  $("#create", box).addEventListener("click", async (e) => {
+    const group = $("#cg", box).value.trim();
+    const names = $("#cn", box).value.split("\n").map((s) => s.trim().replace(/\s+/g, " ")).filter(Boolean);
+    if (!group) return toast("Guruhni yozing");
+    if (!names.length) return toast("Talabalar ro'yxatini joylang");
+    const bad = names.filter((n) => n.split(" ").length < 2);
+    if (bad.length && !confirm(`${bad.length} ta qatorda faqat bitta so'z bor (masalan, «${bad[0]}»). Baribir davom etilsinmi?`)) return;
+    e.target.disabled = true;
+    try {
+      const r = await teacherApi("create", { group, names });
+      showCreated(r.students, `${group} guruhi uchun loginlar`);
+      $("#cn", box).value = "";
+      load();
+    } catch (err) { toast(esc(err.message)); }
+    e.target.disabled = false;
+  });
+  load();
 }
 
 const workSel = (id = "w") => `<select id="${id}">${MUSTAQIL.map((w) => `<option value="${w.id}">${esc(w.id)} — ${esc(w.nomi)}</option>`).join("")}</select>`;

@@ -2,7 +2,7 @@
 
 import { $, $$, toast, confetti, sound, esc, soundOn } from "./ui.js";
 import { store, levelInfo, setNotifiers } from "./store.js";
-import { isLoggedIn, isTeacher, looksTeacher } from "./auth.js";
+import { isLoggedIn, isTeacher, looksTeacher, verifyStudent } from "./auth.js";
 
 const ROUTES = {
   "": () => import("./pages/home.js"),
@@ -51,6 +51,11 @@ async function render() {
   const id = ++renderId;
   const { name, params, query } = parseHash();
   if (!PUBLIC.has(name) && !isLoggedIn()) return toLogin("talaba");
+  if (!PUBLIC.has(name) && !looksTeacher() && !(await verifyStudent())) {
+    if (id !== renderId) return;
+    toast("Kirish muddati tugagan yoki parol yangilangan — qayta kiring");
+    return toLogin("talaba");
+  }
   if (TEACHER_ONLY.has(name) && !(await isTeacher())) {
     if (id !== renderId) return;
     toast("Bu bo'lim faqat o'qituvchi uchun");
