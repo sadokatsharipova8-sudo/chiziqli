@@ -1,9 +1,14 @@
 // Chiziqli algebra platformasi — Cloudflare Worker.
 // Statik fayllar "public/" dan beriladi; bu yerda faqat jonli viktorina (Kahoot uslubi) API si.
 //
-//   POST /api/room                 -> yangi xona: { pin, hostKey }
+//   POST /api/teacher/login        -> { password } => { token } (o'qituvchi kirishi)
+//   POST /api/teacher/check        -> { token } => { ok }
+//   POST /api/room                 -> yangi xona: { pin, hostKey } (faqat o'qituvchi tokeni bilan)
 //   GET  /api/room/:pin/info       -> xona holati
 //   GET  /api/room/:pin/ws         -> WebSocket (role=host&key=... yoki role=player&name=...&pid=...)
+//
+// O'qituvchi paroli kodda saqlanmaydi: Cloudflare → Worker → Settings → Variables and Secrets
+// bo'limida TEACHER_PASSWORD nomli maxfiy o'zgaruvchi (Secret) sifatida kiritiladi.
 
 import { DurableObject } from "cloudflare:workers";
 
@@ -13,11 +18,59 @@ const json = (data, status = 200) =>
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
 
+const TOKEN_TTL = 30 * 24 * 3600 * 1000; // 30 kun
+const enc = new TextEncoder();
+const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+async function hmac(secret, data) {
+  const key = await crypto.subtle.importKey("raw", enc.encode("cag-teacher|" + secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return b64url(await crypto.subtle.sign("HMAC", key, enc.encode(data)));
+}
+
+/** Uzunligi teng bo'lmagan satrlarni ham vaqt bo'yicha bir xil taqqoslaydi. */
+async function safeEqual(a, b) {
+  const [x, y] = await Promise.all([a, b].map((s) => crypto.subtle.digest("SHA-256", enc.encode(String(s)))));
+  const u = new Uint8Array(x), v = new Uint8Array(y);
+  let d = 0;
+  for (let i = 0; i < u.length; i++) d |= u[i] ^ v[i];
+  return d === 0;
+}
+
+async function makeToken(env) {
+  const payload = String(Date.now() + TOKEN_TTL);
+  return payload + "." + (await hmac(env.TEACHER_PASSWORD, payload));
+}
+
+async function checkToken(env, token) {
+  if (!env.TEACHER_PASSWORD || typeof token !== "string") return false;
+  const [payload, sig] = token.split(".");
+  if (!payload || !sig || !(+payload > Date.now())) return false;
+  return safeEqual(sig, await hmac(env.TEACHER_PASSWORD, payload));
+}
+
+const readJson = async (request) => { try { return await request.json(); } catch { return {}; } };
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (url.pathname === "/api/teacher/login" && request.method === "POST") {
+      if (!env.TEACHER_PASSWORD) return json({ error: "O'qituvchi paroli hali o'rnatilmagan (Cloudflare'da TEACHER_PASSWORD)" }, 503);
+      const { password } = await readJson(request);
+      if (!(await safeEqual(password ?? "", env.TEACHER_PASSWORD))) {
+        await new Promise((r) => setTimeout(r, 600)); // parol tanlashni sekinlashtirish
+        return json({ error: "Parol noto'g'ri" }, 401);
+      }
+      return json({ token: await makeToken(env) });
+    }
+
+    if (url.pathname === "/api/teacher/check" && request.method === "POST") {
+      const { token } = await readJson(request);
+      return json({ ok: await checkToken(env, token) });
+    }
+
     if (url.pathname === "/api/room" && request.method === "POST") {
+      if (!(await checkToken(env, request.headers.get("x-teacher-token")))) return json({ error: "Faqat o'qituvchi xona yarata oladi" }, 401);
       for (let i = 0; i < 10; i++) {
         const pin = String(100000 + Math.floor(Math.random() * 900000));
         const stub = env.ROOMS.get(env.ROOMS.idFromName(pin));

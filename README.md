@@ -36,6 +36,14 @@ XP, darajalar, kunlik seriya va 16 ta nishon — har bir talabaning brauzerida s
 > Jonli viktorina Durable Objects (SQLite) dan foydalanadi — bu Cloudflare'ning **bepul** rejasida ham mavjud.
 > O'z domeningizni ulash: Worker → **Settings → Domains & Routes → Add custom domain**.
 
+### O'qituvchi paroli
+
+Saytga kirishda talaba F.I.Sh. va guruhini yozadi, o'qituvchi esa parol bilan kiradi. O'qituvchi paneli (javob kalitlari, bosma variantlar) va jonli viktorina xonasini yaratish faqat o'qituvchiga ochiq.
+
+Parol kodda saqlanmaydi. Uni Cloudflare'da o'rnating:
+**Workers & Pages → chiziqli → Settings → Variables and Secrets → Add** → Type: **Secret**, Name: `TEACHER_PASSWORD`, Value: parolingiz → **Deploy**.
+Parolni almashtirsangiz, avval kirgan barcha o'qituvchi qurilmalari avtomatik chiqib ketadi.
+
 ### Mahalliy sinov (ixtiyoriy)
 
 Node.js o'rnatilgan bo'lsa: `npm install`, so'ng `npx wrangler dev` — sayt `http://localhost:8787` da ochiladi (jonli viktorina ham ishlaydi).

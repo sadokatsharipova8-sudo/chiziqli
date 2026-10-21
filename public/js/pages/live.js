@@ -5,6 +5,7 @@
 import { SAVOLLAR } from "../../content/savollar.js";
 import { TOPICS } from "../generators.js";
 import { store, addXP } from "../store.js";
+import { teacherToken } from "../auth.js";
 import { $, $$, esc, mathText, toast, confetti, sound, download, shuffle, parseMcq } from "../ui.js";
 
 const SHAPES = ["▲", "◆", "●", "■"];
@@ -107,7 +108,7 @@ function renderHost(el) {
       };
       $("#create", el).disabled = true;
       try {
-        const r = await fetch("/api/room", { method: "POST" });
+        const r = await fetch("/api/room", { method: "POST", headers: { "x-teacher-token": teacherToken() } });
         if (!r.ok) throw new Error();
         const { pin, hostKey } = await r.json();
         ssSet("cag-host", { pin, hostKey });

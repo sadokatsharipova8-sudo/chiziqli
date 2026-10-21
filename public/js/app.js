@@ -2,9 +2,11 @@
 
 import { $, $$, toast, confetti, sound, esc, soundOn } from "./ui.js";
 import { store, levelInfo, setNotifiers } from "./store.js";
+import { isLoggedIn, isTeacher, looksTeacher } from "./auth.js";
 
 const ROUTES = {
   "": () => import("./pages/home.js"),
+  kirish: () => import("./pages/kirish.js"),
   darslik: () => import("./pages/darslik.js"),
   lab: () => import("./pages/lab.js"),
   mashq: () => import("./pages/mashq.js"),
@@ -25,6 +27,16 @@ const ROUTES = {
 
 const NAV_OF = { jonli: "oyinlar", qoshilish: "oyinlar", charx: "oyinlar", taxta: "oyinlar", sprint: "oyinlar", xotira: "oyinlar", profil: "" };
 
+// Kirishsiz ochiladigan sahifalar (jonli viktorinaga qo'shilish — telefondan, PIN orqali).
+const PUBLIC = new Set(["kirish", "qoshilish"]);
+// Faqat o'qituvchi uchun (javob kalitlari, jonli xona yaratish).
+const TEACHER_ONLY = new Set(["oqituvchi", "jonli"]);
+
+const toLogin = (rol) => {
+  const next = location.hash && location.hash !== "#/" ? "&next=" + encodeURIComponent(location.hash) : "";
+  location.replace(`#/kirish?rol=${rol}${next}`);
+};
+
 let cleanup = null;
 let renderId = 0;
 
@@ -38,6 +50,15 @@ export function parseHash() {
 async function render() {
   const id = ++renderId;
   const { name, params, query } = parseHash();
+  if (!PUBLIC.has(name) && !isLoggedIn()) return toLogin("talaba");
+  if (TEACHER_ONLY.has(name) && !(await isTeacher())) {
+    if (id !== renderId) return;
+    toast("Bu bo'lim faqat o'qituvchi uchun");
+    return toLogin("oqituvchi");
+  }
+  if (id !== renderId) return;
+  document.body.classList.toggle("auth-mode", name === "kirish");
+  paintNav();
   const loader = ROUTES[name] || ROUTES[""];
   const view = $("#view");
   if (typeof cleanup === "function") { try { cleanup(); } catch {} }
@@ -58,14 +79,25 @@ async function render() {
   view.focus({ preventScroll: true });
 }
 
+function paintNav() {
+  const t = looksTeacher();
+  $$("[data-teacher]").forEach((a) => (a.hidden = !t));
+  const ll = $("#teacher-login-link");
+  if (ll) ll.hidden = t;
+}
+
 function renderMe() {
   const s = store.get();
   const L = levelInfo();
-  $("#me-card").innerHTML = `
-    <div class="row between"><b>${esc(s.profile.name || "Mehmon talaba")}</b><span class="pill primary">${L.level}-daraja</span></div>
-    <div class="lvl">${esc(L.name)} · ${s.xp} XP · 🔥 ${s.streak}</div>
+  const t = looksTeacher();
+  $("#me-card").innerHTML = t
+    ? `<div class="row between"><b>👩‍🏫 O'qituvchi</b><span class="pill primary">kirilgan</span></div>
+       <div class="lvl">${esc(s.profile.name || "Profil va chiqish")}</div>`
+    : `<div class="row between"><b>${esc(s.profile.name || "Mehmon talaba")}</b><span class="pill primary">${L.level}-daraja</span></div>
+    <div class="lvl">${esc(s.profile.group ? s.profile.group + " · " : "")}${esc(L.name)} · ${s.xp} XP · 🔥 ${s.streak}</div>
     <div class="progress" style="margin-top:8px"><i style="width:${L.pct}%"></i></div>`;
   $("#top-xp").textContent = `⭐ ${s.xp} XP · 🔥 ${s.streak}`;
+  paintNav();
 }
 
 function setTheme(next) {

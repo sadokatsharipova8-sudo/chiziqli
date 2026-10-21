@@ -1,5 +1,6 @@
 import { store, levelInfo, BADGES, LEVELS, LEVEL_NAMES } from "../store.js";
 import { $, esc, toast, download } from "../ui.js";
+import { looksTeacher, logoutTeacher, logoutAll } from "../auth.js";
 
 export function render(el) {
   const s = store.get(), L = levelInfo();
@@ -26,11 +27,21 @@ export function render(el) {
       </div>
     </div>
     <div class="card mt">
+      <h3>Hisob</h3>
+      <p class="small muted">${looksTeacher() ? "Siz o'qituvchi sifatida kirgansiz." : "Siz talaba sifatida kirgansiz."} Umumiy kompyuterda ishlagan bo'lsangiz, oxirida chiqib keting. Talaba chiqqanda XP va progress shu brauzerda saqlanib qoladi.</p>
+      <div class="row">
+        ${looksTeacher() ? `<button class="btn" id="out-t">🔒 O'qituvchi hisobidan chiqish</button>` : `<a class="btn" href="#/kirish?rol=oqituvchi">🔐 O'qituvchi sifatida kirish</a>`}
+        <button class="btn" id="out-all">🚪 Chiqish</button>
+      </div>
+    </div>
+    <div class="card mt">
       <h3>Ma'lumotlar</h3>
       <p class="small muted">Progress faqat shu brauzerda saqlanadi. Boshqa qurilmaga ko'chirish uchun eksport/import qiling.</p>
       <div class="row"><button class="btn" id="exp">⬇️ Eksport</button><label class="btn">⬆️ Import<input type="file" id="imp" accept=".json" hidden></label><button class="btn danger" id="reset">Hammasini o'chirish</button></div>
     </div>`;
   $("#save", el).addEventListener("click", () => { s.profile.name = $("#nm", el).value.trim(); s.profile.group = $("#gr", el).value.trim(); store.save(); toast("Saqlandi ✓"); });
+  $("#out-t", el)?.addEventListener("click", () => { logoutTeacher(); store.save(); toast("O'qituvchi hisobidan chiqdingiz"); render(el); });
+  $("#out-all", el).addEventListener("click", () => { logoutAll(); location.hash = "#/kirish"; });
   $("#exp", el).addEventListener("click", () => download("chiziqli-algebra-progress.json", store.export(), "application/json"));
   $("#imp", el).addEventListener("change", async (e) => {
     try { store.import(await e.target.files[0].text()); toast("Import qilindi"); render(el); } catch { toast("Fayl noto'g'ri"); }
