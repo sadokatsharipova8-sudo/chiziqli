@@ -2,7 +2,7 @@
   // Cloudflare Workers konfiguratsiyasi.
   // Statik sayt "public/" papkasidan beriladi, /api/* so'rovlari esa src/worker.js ga keladi.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "chiziqli-algebra",
+  "name": "chiziqli",
   "main": "src/worker.js",
   "compatibility_date": "2025-09-01",
   "assets": {
