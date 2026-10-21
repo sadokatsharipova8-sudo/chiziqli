@@ -1,0 +1,21 @@
+{
+  // Cloudflare Workers konfiguratsiyasi.
+  // Statik sayt "public/" papkasidan beriladi, /api/* so'rovlari esa src/worker.js ga keladi.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chiziqli-algebra",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOMS", "class_name": "QuizRoom" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["QuizRoom"] }
+  ],
+  "observability": { "enabled": true }
+}

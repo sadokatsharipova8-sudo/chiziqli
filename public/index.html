@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chiziqli Algebra Lab</title>
+  <meta name="description" content="Chiziqli algebra va analitik geometriya — interaktiv darslik, laboratoriya, mashqlar, mustaqil ishlar va o'yinlar.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%234f46e5'/><text x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Georgia' font-style='italic'>λ</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    try { const t = localStorage.getItem("cag-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#/">
+        <span class="brand-logo">λ</span>
+        <span class="brand-text"><b>Chiziqli Algebra</b><small>va analitik geometriya</small></span>
+      </a>
+      <nav class="nav" id="nav">
+        <a href="#/" data-route="">🏠 <span>Bosh sahifa</span></a>
+        <a href="#/darslik" data-route="darslik">📘 <span>Darslik</span></a>
+        <a href="#/lab" data-route="lab">🔬 <span>Laboratoriya</span></a>
+        <a href="#/mashq" data-route="mashq">🎯 <span>Mashqlar</span></a>
+        <a href="#/takrorlash" data-route="takrorlash">🔁 <span>Takrorlash</span></a>
+        <a href="#/mustaqil" data-route="mustaqil">📝 <span>Mustaqil ish</span></a>
+        <a href="#/oyinlar" data-route="oyinlar">🎮 <span>O'yinlar</span></a>
+        <div class="nav-sep">Sinf uchun</div>
+        <a href="#/vositalar" data-route="vositalar">🧰 <span>Sinf vositalari</span></a>
+        <a href="#/metodika" data-route="metodika">🎓 <span>Metodika</span></a>
+        <a href="#/oqituvchi" data-route="oqituvchi">👩‍🏫 <span>O'qituvchi paneli</span></a>
+      </nav>
+      <a class="me" href="#/profil" id="me-card"></a>
+      <div class="side-actions">
+        <button class="icon-btn" id="theme-btn" title="Mavzu (yorug'/qorong'i)">🌓</button>
+        <button class="icon-btn" id="sound-btn" title="Tovush">🔊</button>
+      </div>
+    </aside>
+    <header class="topbar">
+      <button class="icon-btn" id="menu-btn" aria-label="Menyu">☰</button>
+      <a class="brand small" href="#/"><span class="brand-logo">λ</span><b>Chiziqli Algebra</b></a>
+      <span class="top-xp" id="top-xp"></span>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+  <div id="toast-root"></div>
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

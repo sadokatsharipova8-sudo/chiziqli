@@ -1,0 +1,13 @@
+{
+  "name": "chiziqli-algebra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chiziqli algebra va analitik geometriya — interaktiv o'quv platformasi",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.40.0"
+  }
+}
