@@ -15,7 +15,7 @@ function renderList(el) {
   el.innerHTML = `
     <div class="page-head">
       <h1>🎯 Mashqlar</h1>
-      <p>Har safar yangi sonlar bilan yangi masala. Maslahatlar bosqichma-bosqich ochiladi, to'liq yechim har doim mavjud.
+      <p>Har safar yangi sonlar bilan yangi masala. Maslahatlar bosqichma-bosqich ochiladi, to'liq yechim esa 5 ta urinishdan so'ng (yoki to'g'ri javobdan keyin) ochiladi — avval o'zingiz harakat qiling.
       To'g'ri javoblar mavzuni <b>Boshlangan → Tanish → Malakali → Ustoz</b> darajalariga ko'taradi.</p>
     </div>
     <a class="card tile mb" href="#/mashq/aralash" style="flex-direction:row;align-items:center;gap:16px;border-left:5px solid var(--primary)">

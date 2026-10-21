@@ -3,6 +3,9 @@
 import { mathText, answerInputs, checkInputs, answerTex, $, $$, esc, toast, sound } from "./ui.js";
 import { topicById } from "./generators.js";
 
+/** Yechimni ko'rish tugmasi shuncha noto'g'ri javobdan keyin ochiladi (avval mustaqil urinish). */
+export const SOLUTION_AFTER = 5;
+
 export function problemCard(host, gen, problem, { onSolved, onAttempt, onNext } = {}) {
   // Har safar yangi ichki element — eski tinglovchilar qolib ketmasligi uchun.
   const el = document.createElement("div");
@@ -18,7 +21,7 @@ export function problemCard(host, gen, problem, { onSolved, onAttempt, onNext } 
       <div class="row mt">
         <button class="btn primary" data-a="check">✓ Tekshirish</button>
         <button class="btn" data-a="hint">💡 Maslahat <span class="muted small">(${problem.hints.length})</span></button>
-        <button class="btn ghost" data-a="sol">📖 Yechimni ko'rish</button>
+        <button class="btn ghost" data-a="sol" disabled></button>
         <button class="btn ok" data-a="next" hidden>Keyingi masala →</button>
       </div>
       <div class="hints"></div>
@@ -27,6 +30,13 @@ export function problemCard(host, gen, problem, { onSolved, onAttempt, onNext } 
     </div>`;
 
   const q = (s) => $(s, el);
+  function paintSol() {
+    const b = q('[data-a="sol"]'), left = SOLUTION_AFTER - wrongs;
+    b.disabled = left > 0;
+    b.innerHTML = left > 0 ? `🔒 Yechim <span class="small">(yana ${left} ta urinishdan so'ng)</span>` : "📖 Yechimni ko'rish";
+    b.title = left > 0 ? `Yechim ${SOLUTION_AFTER} ta noto'g'ri javobdan keyin ochiladi` : "";
+  }
+  paintSol();
   const first = q(".ans-in");
   setTimeout(() => first?.focus({ preventScroll: true }), 50);
 
@@ -62,16 +72,21 @@ export function problemCard(host, gen, problem, { onSolved, onAttempt, onNext } 
       sound("bad");
       wrongs++;
       if (wrongs === 1) onAttempt?.(false);
-      q(".result").innerHTML = `<div class="result-banner bad">✗ Hali to'g'ri emas. ${wrongs >= 2 ? "Maslahat yoki yechimga qarang." : "Qizil maydonlarni qayta tekshiring."}</div>`;
+      paintSol();
+      const left = SOLUTION_AFTER - wrongs;
+      const tip = left > 0
+        ? (wrongs >= 2 ? "Maslahatdan foydalaning. " : "Qizil maydonlarni qayta tekshiring. ") + `Yechim yana ${left} ta urinishdan so'ng ochiladi.`
+        : "Endi «📖 Yechimni ko'rish» tugmasi ochildi.";
+      q(".result").innerHTML = `<div class="result-banner bad">✗ Hali to'g'ri emas (${wrongs}-urinish). ${tip}</div>`;
     }
   }
 
   el.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.classList.contains("ans-in")) check(); });
   q('[data-a="check"]').addEventListener("click", check);
   q('[data-a="next"]').addEventListener("click", () => onNext?.());
-  q('[data-a="sol"]').addEventListener("click", () => { showSolution(); if (!solved) onAttempt?.(false, true); });
+  q('[data-a="sol"]').addEventListener("click", () => { if (wrongs < SOLUTION_AFTER && !solved) return; showSolution(); if (!solved) onAttempt?.(false, true); });
   q('[data-a="hint"]').addEventListener("click", () => {
-    if (hintsShown >= problem.hints.length) { toast("Boshqa maslahat yo'q — yechimga qarang"); return; }
+    if (hintsShown >= problem.hints.length) { toast(wrongs >= SOLUTION_AFTER ? "Boshqa maslahat yo'q — yechimga qarang" : "Boshqa maslahat yo'q — yana urinib ko'ring"); return; }
     hintsShown++;
     q(".hints").innerHTML = `<div class="hint-box">${problem.hints.slice(0, hintsShown).map((h, i) => `<div>💡 <b>${i + 1}.</b> ${mathText(h)}</div>`).join("")}</div>`;
   });
